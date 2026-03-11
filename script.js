@@ -118,6 +118,34 @@
     return result;
   }
 
+  /** Returns config options for the current browser(s) and OS(es). Merges browser|os-specific + additional, dedupes by id. */
+  function getConfigForSelection() {
+    var browsers = getSelectedBrowsers();
+    var oses = getSelectedOSes();
+    if (!browsers.length || !oses.length) return [];
+    var seen = {};
+    var merged = [];
+    browsers.forEach(function (browser) {
+      oses.forEach(function (os) {
+        var key = browser + "|" + os;
+        var items = CONFIG_OPTIONS[key] || [];
+        items.forEach(function (item) {
+          if (!seen[item.id]) {
+            seen[item.id] = true;
+            merged.push(item);
+          }
+        });
+      });
+    });
+    CONFIG_OPTIONS_ADDITIONAL.forEach(function (item) {
+      if (!seen[item.id]) {
+        seen[item.id] = true;
+        merged.push(item);
+      }
+    });
+    return merged;
+  }
+
   /** Returns config options for the current browser(s) and OS(es). Merges browser|os-specific + additional, dedupes by url. */
   function getConfigForSelection() {
     var browsers = getSelectedBrowsers();
@@ -210,10 +238,9 @@
     return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
-  /** Fills the summary section with one link per unique deployment option (deduped by id), labelled by browser/OS combo(s). */
+  /** Fills the summary section with one link per option (to Pendo support articles), labelled by browser/OS. */
   function renderSummaryLinks(items) {
     summaryLinks.innerHTML = "";
-    var byId = {};
     items.forEach(function (item) {
       var opt = item.opt;
       var url = SUPPORT_URLS[opt.id];
@@ -233,7 +260,7 @@
       a.href = entry.url;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
-      a.textContent = label;
+      a.textContent = opt.title + " (" + formatBrowserOsLabel(item.browser, item.os) + ") — View setup guide";
       li.appendChild(a);
       summaryLinks.appendChild(li);
     });
