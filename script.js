@@ -40,11 +40,15 @@
   };
 
   /* ----- DOM references ----- */
-  var optionsSection = document.getElementById("deployment-options-section");
   var optionsContainer = document.getElementById("options-container");
-  var summarySection = document.getElementById("summary-section");
   var summaryLinks = document.getElementById("summary-links");
-  var choiceHint = document.getElementById("choice-hint");
+  var choiceHintBrowsers = document.getElementById("choice-hint-browsers");
+  var choiceHintOs = document.getElementById("choice-hint-os");
+  var resultsIntro = document.getElementById("results-intro");
+
+  /* ----- Step state ----- */
+  var currentStep = "intro";
+  var STEP_ORDER = ["intro", "browsers", "os", "results"];
 
   /* ----- Selection helpers ----- */
   /** Returns an array of selected browser ids (chrome | edge | firefox). Multiple allowed. */
@@ -80,7 +84,7 @@
   }
 
   /* ----- Rendering ----- */
-  /** Builds one deployment option card: title, description, "View setup guide" link, expandable pros/cons. */
+  /** Builds one deployment option card: title, description, "View setup guide" link, pros/cons visible by default. */
   function renderOptionCard(opt) {
     var url = SUPPORT_URLS[opt.id];
     var card = document.createElement("div");
@@ -93,9 +97,9 @@
     var hasProsCons = (opt.pros && opt.pros.length) || (opt.cons && opt.cons.length);
     var prosConsBody = "";
     if (hasProsCons) {
-      prosConsBody = "<div id=\"" + prosConsId + "\" class=\"pros-cons-content\" hidden>";
-      if (opt.pros && opt.pros.length) prosConsBody += "<p style=\"margin:0 0 0.25rem 0;font-weight:600;\">Pros</p><ul>" + prosItems + "</ul>";
-      if (opt.cons && opt.cons.length) prosConsBody += "<p style=\"margin:0.5rem 0 0.25rem 0;font-weight:600;\">Cons</p><ul>" + consItems + "</ul>";
+      prosConsBody = "<div id=\"" + prosConsId + "\" class=\"pros-cons-content\">";
+      if (opt.pros && opt.pros.length) prosConsBody += "<p class=\"pros-cons-heading\">Pros</p><ul>" + prosItems + "</ul>";
+      if (opt.cons && opt.cons.length) prosConsBody += "<p class=\"pros-cons-heading pros-cons-heading-cons\">Cons</p><ul>" + consItems + "</ul>";
       prosConsBody += "</div>";
     }
 
@@ -103,20 +107,7 @@
       "<h3>" + escapeHtml(opt.title) + "</h3>" +
       "<p class=\"option-desc\">" + escapeHtml(opt.desc) + "</p>" +
       (url ? "<a href=\"" + escapeAttr(url) + "\" class=\"option-link\" target=\"_blank\" rel=\"noopener noreferrer\">View setup guide</a>" : "") +
-      (hasProsCons
-        ? "<button type=\"button\" class=\"pros-cons-toggle\" aria-expanded=\"false\" aria-controls=\"" + prosConsId + "\" id=\"toggle-" + opt.id + "\">Pros &amp; cons</button>" + prosConsBody
-        : "");
-
-    /* Wire up expand/collapse behaviour for pros and cons */
-    if (hasProsCons) {
-      var toggle = card.querySelector(".pros-cons-toggle");
-      var content = card.querySelector(".pros-cons-content");
-      toggle.addEventListener("click", function () {
-        var expanded = content.hidden;
-        content.hidden = !expanded;
-        toggle.setAttribute("aria-expanded", expanded);
-      });
-    }
+      prosConsBody;
 
     return card;
   }
@@ -150,34 +141,42 @@
     });
   }
 
-  /** Updates deployment options, summary links, and hint text based on current browser/OS selection. */
+  /** Updates hints, Next button states, and (when on results) deployment options and summary. */
   function updateUI() {
+    var browsers = getSelectedBrowsers();
+    var os = getSelectedOS();
     var opts = getOptionsForSelection();
-    optionsContainer.innerHTML = "";
-    summaryLinks.innerHTML = "";
 
-    if (opts.length > 0) {
-      optionsSection.hidden = false;
-      summarySection.hidden = false;
-      var browsers = getSelectedBrowsers();
-      var os = getSelectedOS();
-      var browserLabel = browsers.length > 1
-        ? browsers.slice(0, -1).join(", ") + " and " + browsers[browsers.length - 1]
-        : browsers[0];
-      choiceHint.textContent = "Deployment options and setup guides for " + browserLabel + " on " + os + " are below.";
-      opts.forEach(function (opt) {
-        optionsContainer.appendChild(renderOptionCard(opt));
-      });
-      renderSummaryLinks(opts);
-    } else {
-      var browsers = getSelectedBrowsers();
-      var os = getSelectedOS();
-      optionsSection.hidden = true;
-      summarySection.hidden = true;
-      if (browsers.length && os) {
-        choiceHint.textContent = "No managed deployment options for this browser and OS combination. Consider manual install for testing only (see below), or choose a different browser/OS.";
+    if (choiceHintBrowsers) {
+      choiceHintBrowsers.textContent = browsers.length
+        ? (browsers.length > 1 ? browsers.slice(0, -1).join(", ") + " and " + browsers[browsers.length - 1] + " selected." : browsers[0] + " selected.")
+        : "Select at least one browser.";
+    }
+    if (choiceHintOs) {
+      choiceHintOs.textContent = os
+        ? os + " selected."
+        : "Select your operating system.";
+    }
+
+    var btnNextBrowsers = document.getElementById("btn-next-browsers");
+    var btnNextOs = document.getElementById("btn-next-os");
+    if (btnNextBrowsers) btnNextBrowsers.disabled = browsers.length === 0;
+    if (btnNextOs) btnNextOs.disabled = !os;
+
+    if (currentStep === "results" && optionsContainer && summaryLinks) {
+      optionsContainer.innerHTML = "";
+      summaryLinks.innerHTML = "";
+      if (opts.length > 0) {
+        var browserLabel = browsers.length > 1
+          ? browsers.slice(0, -1).join(", ") + " and " + browsers[browsers.length - 1]
+          : browsers[0];
+        if (resultsIntro) resultsIntro.textContent = "Deployment options for " + browserLabel + " on " + os + ". Review each method and its pros and cons below. Use “View setup guide” to open the official Pendo instructions.";
+        opts.forEach(function (opt) {
+          optionsContainer.appendChild(renderOptionCard(opt));
+        });
+        renderSummaryLinks(opts);
       } else {
-        choiceHint.textContent = "Select at least one browser and an operating system to see deployment options.";
+        if (resultsIntro) resultsIntro.textContent = "No managed deployment options for this browser and OS combination. Consider manual install for testing only (see below), or change your selection.";
       }
     }
   }
@@ -200,7 +199,43 @@
     });
   }
 
-  /* ----- Initialise: attach listeners and render initial state ----- */
+  /** Shows one step panel and updates URL hash. Calls updateUI when showing results. */
+  function showStep(step) {
+    currentStep = step;
+    document.querySelectorAll(".step-panel").forEach(function (panel) {
+      panel.hidden = panel.id !== "step-" + step;
+    });
+    if (typeof location !== "undefined" && location.hash !== "#" + step) {
+      try { location.hash = step; } catch (e) { }
+    }
+    if (step === "results") updateUI();
+  }
+
+  /** Binds step navigation: CTA, Next, Back, Change selection. */
+  function setupStepNavigation() {
+    var cta = document.getElementById("cta-choose-browsers");
+    if (cta) cta.addEventListener("click", function () { showStep("browsers"); updateUI(); });
+
+    var btnNextBrowsers = document.getElementById("btn-next-browsers");
+    if (btnNextBrowsers) btnNextBrowsers.addEventListener("click", function () { showStep("os"); updateUI(); });
+
+    var btnNextOs = document.getElementById("btn-next-os");
+    if (btnNextOs) btnNextOs.addEventListener("click", function () { showStep("results"); });
+
+    var btnBackOs = document.getElementById("btn-back-os");
+    if (btnBackOs) btnBackOs.addEventListener("click", function () { showStep("browsers"); updateUI(); });
+
+    var btnChange = document.getElementById("btn-change-selection");
+    if (btnChange) btnChange.addEventListener("click", function () { showStep("os"); updateUI(); });
+  }
+
+  /* ----- Initialise: attach listeners, restore step from hash, render ----- */
   setupOptionButtons();
-  updateUI();
+  setupStepNavigation();
+  (function applyInitialStep() {
+    var hash = typeof location !== "undefined" && location.hash ? location.hash.slice(1) : "";
+    var step = STEP_ORDER.indexOf(hash) !== -1 ? hash : "intro";
+    showStep(step);
+    if (step !== "results") updateUI();
+  })();
 })();
