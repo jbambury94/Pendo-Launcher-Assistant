@@ -16,6 +16,41 @@
     "firefox-native-manifest": "https://support.pendo.io/hc/en-us/articles/21165614712731-Configure-on-Firefox-for-macOS-using-native-manifest"
   };
 
+  /* ----- Config options: from Pendo Configure + Other configurations (same treatment for all) ----- */
+  var CONFIG_OPTIONS = {
+    "chrome|windows": [
+      { title: "Configure on Chrome for Windows using Microsoft Intune", url: "https://support.pendo.io/hc/en-us/articles/21165595195291-Configure-on-Chrome-for-Windows-using-Microsoft-Intune" },
+      { title: "Configure on Chrome for Windows using GPO", url: "https://support.pendo.io/hc/en-us/articles/21944872020123-Configure-on-Chrome-for-Windows-using-GPO" }
+    ],
+    "chrome|macos": [
+      { title: "Configure on Chrome for macOS using Jamf", url: "https://support.pendo.io/hc/en-us/articles/23599972036507-Configure-on-Chrome-for-macOS-using-Jamf" },
+      { title: "Configure on Chrome for macOS using configuration profiles", url: "https://support.pendo.io/hc/en-us/articles/21165733600027-Configure-on-Chrome-for-macOS-using-configuration-profiles" }
+    ],
+    "edge|windows": [
+      { title: "Configure on Edge for Windows using Microsoft Intune", url: "https://support.pendo.io/hc/en-us/articles/21165548353691-Configure-on-Edge-for-Windows-using-Microsoft-Intune" },
+      { title: "Configure on Edge for Windows using GPO", url: "https://support.pendo.io/hc/en-us/articles/21943953049115-Configure-on-Edge-for-Windows-using-GPO" }
+    ],
+    "edge|macos": [],
+    "firefox|windows": [
+      { title: "Configure on Firefox for Windows using Microsoft Intune", url: "https://support.pendo.io/hc/en-us/articles/39911759144091-Configure-on-Firefox-for-Windows-using-Microsoft-Intune" }
+    ],
+    "firefox|macos": [
+      { title: "Configure on Firefox for macOS using native manifest", url: "https://support.pendo.io/hc/en-us/articles/21165614712731-Configure-on-Firefox-for-macOS-using-native-manifest" }
+    ]
+  };
+
+  /* Additional config guides (from Other configurations section); shown for every selection, same list. */
+  var CONFIG_OPTIONS_ADDITIONAL = [
+    { title: "Send data to multiple subscriptions", url: "https://support.pendo.io/hc/en-us/articles/28116857365787-Send-data-to-multiple-subscriptions" },
+    { title: "Use Okta Workflows for metadata sync", url: "https://support.pendo.io/hc/en-us/articles/21166420488219-Use-Okta-Workflows-for-metadata-sync" },
+    { title: "Customize metadata sent to Pendo with Active Directory (AD) scripts", url: "https://support.pendo.io/hc/en-us/articles/21165984701339-Customize-metadata-sent-to-Pendo-with-Active-Directory-AD-scripts" },
+    { title: "Identify visitors and metadata using a Salesforce component", url: "https://support.pendo.io/hc/en-us/articles/21165941276827-Identify-visitors-and-metadata-using-a-Salesforce-component" },
+    { title: "Identify visitors and metadata through browser scripting", url: "https://support.pendo.io/hc/en-us/articles/22764466082715-Identify-visitors-and-metadata-through-browser-scripting" },
+    { title: "Identify visitors and metadata through Microsoft Azure", url: "https://support.pendo.io/hc/en-us/articles/24912566392731-Identify-visitors-and-metadata-through-Microsoft-Azure" },
+    { title: "Identify visitors and metadata through Okta", url: "https://support.pendo.io/hc/en-us/articles/27309490373915-Identify-visitors-and-metadata-through-Okta" },
+    { title: "Identify visitors and metadata through an IdP", url: "https://support.pendo.io/hc/en-us/articles/29288315221787-Identify-visitors-and-metadata-through-an-IdP" }
+  ];
+
   /* ----- Options matrix: key is "browser|os", value is array of option objects (id, title, desc, pros, cons) ----- */
   var OPTIONS_MATRIX = {
     "chrome|windows": [
@@ -40,11 +75,17 @@
   };
 
   /* ----- DOM references ----- */
-  var optionsSection = document.getElementById("deployment-options-section");
   var optionsContainer = document.getElementById("options-container");
-  var summarySection = document.getElementById("summary-section");
   var summaryLinks = document.getElementById("summary-links");
-  var choiceHint = document.getElementById("choice-hint");
+  var choiceHintBrowsers = document.getElementById("choice-hint-browsers");
+  var choiceHintOs = document.getElementById("choice-hint-os");
+  var resultsIntro = document.getElementById("results-intro");
+  var configLinks = document.getElementById("config-links");
+  var configHint = document.getElementById("config-hint");
+
+  /* ----- Step state ----- */
+  var currentStep = "intro";
+  var STEP_ORDER = ["intro", "browsers", "os", "config", "results"];
 
   /* ----- Selection helpers ----- */
   /** Returns an array of selected browser ids (chrome | edge | firefox). Multiple allowed. */
@@ -79,8 +120,34 @@
     return merged;
   }
 
+  /** Returns config guide links for the current browser(s) and OS. Merges browser|os-specific + additional (same treatment), dedupes by url. */
+  function getConfigForSelection() {
+    var browsers = getSelectedBrowsers();
+    var os = getSelectedOS();
+    if (!browsers.length || !os) return [];
+    var seen = {};
+    var merged = [];
+    browsers.forEach(function (browser) {
+      var key = browser + "|" + os;
+      var items = CONFIG_OPTIONS[key] || [];
+      items.forEach(function (item) {
+        if (!seen[item.url]) {
+          seen[item.url] = true;
+          merged.push(item);
+        }
+      });
+    });
+    CONFIG_OPTIONS_ADDITIONAL.forEach(function (item) {
+      if (!seen[item.url]) {
+        seen[item.url] = true;
+        merged.push(item);
+      }
+    });
+    return merged;
+  }
+
   /* ----- Rendering ----- */
-  /** Builds one deployment option card: title, description, "View setup guide" link, expandable pros/cons. */
+  /** Builds one deployment option card: title, description, "View setup guide" link, pros/cons visible by default. */
   function renderOptionCard(opt) {
     var url = SUPPORT_URLS[opt.id];
     var card = document.createElement("div");
@@ -93,9 +160,9 @@
     var hasProsCons = (opt.pros && opt.pros.length) || (opt.cons && opt.cons.length);
     var prosConsBody = "";
     if (hasProsCons) {
-      prosConsBody = "<div id=\"" + prosConsId + "\" class=\"pros-cons-content\" hidden>";
-      if (opt.pros && opt.pros.length) prosConsBody += "<p style=\"margin:0 0 0.25rem 0;font-weight:600;\">Pros</p><ul>" + prosItems + "</ul>";
-      if (opt.cons && opt.cons.length) prosConsBody += "<p style=\"margin:0.5rem 0 0.25rem 0;font-weight:600;\">Cons</p><ul>" + consItems + "</ul>";
+      prosConsBody = "<div id=\"" + prosConsId + "\" class=\"pros-cons-content\">";
+      if (opt.pros && opt.pros.length) prosConsBody += "<p class=\"pros-cons-heading\">Pros</p><ul>" + prosItems + "</ul>";
+      if (opt.cons && opt.cons.length) prosConsBody += "<p class=\"pros-cons-heading pros-cons-heading-cons\">Cons</p><ul>" + consItems + "</ul>";
       prosConsBody += "</div>";
     }
 
@@ -103,20 +170,7 @@
       "<h3>" + escapeHtml(opt.title) + "</h3>" +
       "<p class=\"option-desc\">" + escapeHtml(opt.desc) + "</p>" +
       (url ? "<a href=\"" + escapeAttr(url) + "\" class=\"option-link\" target=\"_blank\" rel=\"noopener noreferrer\">View setup guide</a>" : "") +
-      (hasProsCons
-        ? "<button type=\"button\" class=\"pros-cons-toggle\" aria-expanded=\"false\" aria-controls=\"" + prosConsId + "\" id=\"toggle-" + opt.id + "\">Pros &amp; cons</button>" + prosConsBody
-        : "");
-
-    /* Wire up expand/collapse behaviour for pros and cons */
-    if (hasProsCons) {
-      var toggle = card.querySelector(".pros-cons-toggle");
-      var content = card.querySelector(".pros-cons-content");
-      toggle.addEventListener("click", function () {
-        var expanded = content.hidden;
-        content.hidden = !expanded;
-        toggle.setAttribute("aria-expanded", expanded);
-      });
-    }
+      prosConsBody;
 
     return card;
   }
@@ -150,34 +204,42 @@
     });
   }
 
-  /** Updates deployment options, summary links, and hint text based on current browser/OS selection. */
+  /** Updates hints, Next button states, and (when on results) deployment options and summary. */
   function updateUI() {
+    var browsers = getSelectedBrowsers();
+    var os = getSelectedOS();
     var opts = getOptionsForSelection();
-    optionsContainer.innerHTML = "";
-    summaryLinks.innerHTML = "";
 
-    if (opts.length > 0) {
-      optionsSection.hidden = false;
-      summarySection.hidden = false;
-      var browsers = getSelectedBrowsers();
-      var os = getSelectedOS();
-      var browserLabel = browsers.length > 1
-        ? browsers.slice(0, -1).join(", ") + " and " + browsers[browsers.length - 1]
-        : browsers[0];
-      choiceHint.textContent = "Deployment options and setup guides for " + browserLabel + " on " + os + " are below.";
-      opts.forEach(function (opt) {
-        optionsContainer.appendChild(renderOptionCard(opt));
-      });
-      renderSummaryLinks(opts);
-    } else {
-      var browsers = getSelectedBrowsers();
-      var os = getSelectedOS();
-      optionsSection.hidden = true;
-      summarySection.hidden = true;
-      if (browsers.length && os) {
-        choiceHint.textContent = "No managed deployment options for this browser and OS combination. Consider manual install for testing only (see below), or choose a different browser/OS.";
+    if (choiceHintBrowsers) {
+      choiceHintBrowsers.textContent = browsers.length
+        ? (browsers.length > 1 ? browsers.slice(0, -1).join(", ") + " and " + browsers[browsers.length - 1] + " selected." : browsers[0] + " selected.")
+        : "Select at least one browser.";
+    }
+    if (choiceHintOs) {
+      choiceHintOs.textContent = os
+        ? os + " selected."
+        : "Select your operating system.";
+    }
+
+    var btnNextBrowsers = document.getElementById("btn-next-browsers");
+    var btnNextOs = document.getElementById("btn-next-os");
+    if (btnNextBrowsers) btnNextBrowsers.disabled = browsers.length === 0;
+    if (btnNextOs) btnNextOs.disabled = !os;
+
+    if (currentStep === "results" && optionsContainer && summaryLinks) {
+      optionsContainer.innerHTML = "";
+      summaryLinks.innerHTML = "";
+      if (opts.length > 0) {
+        var browserLabel = browsers.length > 1
+          ? browsers.slice(0, -1).join(", ") + " and " + browsers[browsers.length - 1]
+          : browsers[0];
+        if (resultsIntro) resultsIntro.textContent = "Deployment options for " + browserLabel + " on " + os + ". Review each method and its pros and cons below. Use “View setup guide” to open the official Pendo instructions.";
+        opts.forEach(function (opt) {
+          optionsContainer.appendChild(renderOptionCard(opt));
+        });
+        renderSummaryLinks(opts);
       } else {
-        choiceHint.textContent = "Select at least one browser and an operating system to see deployment options.";
+        if (resultsIntro) resultsIntro.textContent = "No managed deployment options for this browser and OS combination. Consider manual install for testing only (see below), or change your selection.";
       }
     }
   }
@@ -200,7 +262,72 @@
     });
   }
 
-  /* ----- Initialise: attach listeners and render initial state ----- */
+  /** Shows one step panel and updates URL hash. Calls updateUI when showing results. */
+  function showStep(step) {
+    currentStep = step;
+    document.querySelectorAll(".step-panel").forEach(function (panel) {
+      panel.hidden = panel.id !== "step-" + step;
+    });
+    if (typeof location !== "undefined" && location.hash !== "#" + step) {
+      try { location.hash = step; } catch (e) { }
+    }
+    if (step === "results") updateUI();
+    if (step === "config") renderConfigStep();
+  }
+
+  /** Fills the config step with links for the current selection. */
+  function renderConfigStep() {
+    if (!configLinks || !configHint) return;
+    var items = getConfigForSelection();
+    configLinks.innerHTML = "";
+    if (items.length > 0) {
+      configHint.textContent = "Configuration guides for your selection:";
+      items.forEach(function (item) {
+        var li = document.createElement("li");
+        var a = document.createElement("a");
+        a.href = item.url;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = item.title;
+        li.appendChild(a);
+        configLinks.appendChild(li);
+      });
+    } else {
+      configHint.textContent = "No dedicated configuration guides for this browser and OS combination. You can still configure after install; see the deployment options in the next step for setup guides that may include config.";
+    }
+  }
+
+  /** Binds step navigation: CTA, Next, Back, Change selection. */
+  function setupStepNavigation() {
+    var cta = document.getElementById("cta-choose-browsers");
+    if (cta) cta.addEventListener("click", function () { showStep("browsers"); updateUI(); });
+
+    var btnNextBrowsers = document.getElementById("btn-next-browsers");
+    if (btnNextBrowsers) btnNextBrowsers.addEventListener("click", function () { showStep("os"); updateUI(); });
+
+    var btnNextOs = document.getElementById("btn-next-os");
+    if (btnNextOs) btnNextOs.addEventListener("click", function () { showStep("config"); });
+
+    var btnBackOs = document.getElementById("btn-back-os");
+    if (btnBackOs) btnBackOs.addEventListener("click", function () { showStep("browsers"); updateUI(); });
+
+    var btnBackConfig = document.getElementById("btn-back-config");
+    if (btnBackConfig) btnBackConfig.addEventListener("click", function () { showStep("os"); updateUI(); });
+
+    var btnNextConfig = document.getElementById("btn-next-config");
+    if (btnNextConfig) btnNextConfig.addEventListener("click", function () { showStep("results"); });
+
+    var btnChange = document.getElementById("btn-change-selection");
+    if (btnChange) btnChange.addEventListener("click", function () { showStep("browsers"); updateUI(); });
+  }
+
+  /* ----- Initialise: attach listeners, restore step from hash, render ----- */
   setupOptionButtons();
-  updateUI();
+  setupStepNavigation();
+  (function applyInitialStep() {
+    var hash = typeof location !== "undefined" && location.hash ? location.hash.slice(1) : "";
+    var step = STEP_ORDER.indexOf(hash) !== -1 ? hash : "intro";
+    showStep(step);
+    if (step !== "results" && step !== "config") updateUI();
+  })();
 })();
