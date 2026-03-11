@@ -87,7 +87,19 @@
         </div>
       </section>
 
-      <!-- Step 4: Results (deployment options + summary + manual install) -->
+      <!-- Step 4: Config options (Configure section links filtered by browsers + OS) -->
+      <section id="step-config" class="step-panel" hidden aria-labelledby="step-config-title">
+        <h2 id="step-config-title" class="section-title">Configure</h2>
+        <p class="section-intro">After install, use these guides to configure Visitor ID, metadata, and other Launcher settings for your chosen browser and OS.</p>
+        <p id="config-hint" class="choice-hint" aria-live="polite"></p>
+        <ul id="config-links" class="summary-links config-links"></ul>
+        <div class="step-actions">
+          <button type="button" id="btn-back-config" class="button-secondary">Back</button>
+          <button type="button" id="btn-next-config" class="cta-button">Next: deployment options</button>
+        </div>
+      </section>
+
+      <!-- Step 5: Results (deployment options + summary + manual install) -->
       <section id="step-results" class="step-panel" hidden aria-labelledby="options-title">
         <h2 id="options-title" class="section-title">Deployment options</h2>
         <p id="results-intro" class="section-intro">Review each method and its pros and cons. Use “View setup guide” to open the official Pendo instructions.</p>

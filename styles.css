@@ -445,6 +445,11 @@ body {
   box-shadow: var(--shadow-focus);
 }
 
+.config-links {
+  margin-top: var(--space-sm);
+  margin-bottom: 0;
+}
+
 /* ----- Manual install: testing and demo only; highlighted warning ----- */
 .manual-warning {
   background: var(--color-warning-bg);
