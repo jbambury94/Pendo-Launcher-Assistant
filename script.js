@@ -16,6 +16,41 @@
     "firefox-native-manifest": "https://support.pendo.io/hc/en-us/articles/21165614712731-Configure-on-Firefox-for-macOS-using-native-manifest"
   };
 
+  /* ----- Config options: from Pendo Configure + Other configurations (same treatment for all) ----- */
+  var CONFIG_OPTIONS = {
+    "chrome|windows": [
+      { title: "Configure on Chrome for Windows using Microsoft Intune", url: "https://support.pendo.io/hc/en-us/articles/21165595195291-Configure-on-Chrome-for-Windows-using-Microsoft-Intune" },
+      { title: "Configure on Chrome for Windows using GPO", url: "https://support.pendo.io/hc/en-us/articles/21944872020123-Configure-on-Chrome-for-Windows-using-GPO" }
+    ],
+    "chrome|macos": [
+      { title: "Configure on Chrome for macOS using Jamf", url: "https://support.pendo.io/hc/en-us/articles/23599972036507-Configure-on-Chrome-for-macOS-using-Jamf" },
+      { title: "Configure on Chrome for macOS using configuration profiles", url: "https://support.pendo.io/hc/en-us/articles/21165733600027-Configure-on-Chrome-for-macOS-using-configuration-profiles" }
+    ],
+    "edge|windows": [
+      { title: "Configure on Edge for Windows using Microsoft Intune", url: "https://support.pendo.io/hc/en-us/articles/21165548353691-Configure-on-Edge-for-Windows-using-Microsoft-Intune" },
+      { title: "Configure on Edge for Windows using GPO", url: "https://support.pendo.io/hc/en-us/articles/21943953049115-Configure-on-Edge-for-Windows-using-GPO" }
+    ],
+    "edge|macos": [],
+    "firefox|windows": [
+      { title: "Configure on Firefox for Windows using Microsoft Intune", url: "https://support.pendo.io/hc/en-us/articles/39911759144091-Configure-on-Firefox-for-Windows-using-Microsoft-Intune" }
+    ],
+    "firefox|macos": [
+      { title: "Configure on Firefox for macOS using native manifest", url: "https://support.pendo.io/hc/en-us/articles/21165614712731-Configure-on-Firefox-for-macOS-using-native-manifest" }
+    ]
+  };
+
+  /* Additional config guides (from Other configurations section); shown for every selection, same list. */
+  var CONFIG_OPTIONS_ADDITIONAL = [
+    { title: "Send data to multiple subscriptions", url: "https://support.pendo.io/hc/en-us/articles/28116857365787-Send-data-to-multiple-subscriptions" },
+    { title: "Use Okta Workflows for metadata sync", url: "https://support.pendo.io/hc/en-us/articles/21166420488219-Use-Okta-Workflows-for-metadata-sync" },
+    { title: "Customize metadata sent to Pendo with Active Directory (AD) scripts", url: "https://support.pendo.io/hc/en-us/articles/21165984701339-Customize-metadata-sent-to-Pendo-with-Active-Directory-AD-scripts" },
+    { title: "Identify visitors and metadata using a Salesforce component", url: "https://support.pendo.io/hc/en-us/articles/21165941276827-Identify-visitors-and-metadata-using-a-Salesforce-component" },
+    { title: "Identify visitors and metadata through browser scripting", url: "https://support.pendo.io/hc/en-us/articles/22764466082715-Identify-visitors-and-metadata-through-browser-scripting" },
+    { title: "Identify visitors and metadata through Microsoft Azure", url: "https://support.pendo.io/hc/en-us/articles/24912566392731-Identify-visitors-and-metadata-through-Microsoft-Azure" },
+    { title: "Identify visitors and metadata through Okta", url: "https://support.pendo.io/hc/en-us/articles/27309490373915-Identify-visitors-and-metadata-through-Okta" },
+    { title: "Identify visitors and metadata through an IdP", url: "https://support.pendo.io/hc/en-us/articles/29288315221787-Identify-visitors-and-metadata-through-an-IdP" }
+  ];
+
   /* ----- Options matrix: key is "browser|os", value is array of option objects (id, title, desc, pros, cons) ----- */
   var OPTIONS_MATRIX = {
     "chrome|windows": [
@@ -45,10 +80,12 @@
   var choiceHintBrowsers = document.getElementById("choice-hint-browsers");
   var choiceHintOs = document.getElementById("choice-hint-os");
   var resultsIntro = document.getElementById("results-intro");
+  var configLinks = document.getElementById("config-links");
+  var configHint = document.getElementById("config-hint");
 
   /* ----- Step state ----- */
   var currentStep = "intro";
-  var STEP_ORDER = ["intro", "browsers", "os", "results"];
+  var STEP_ORDER = ["intro", "browsers", "os", "config", "results"];
 
   /* ----- Selection helpers ----- */
   /** Returns an array of selected browser ids (chrome | edge | firefox). Multiple allowed. */
@@ -79,6 +116,32 @@
           merged.push(opt);
         }
       });
+    });
+    return merged;
+  }
+
+  /** Returns config guide links for the current browser(s) and OS. Merges browser|os-specific + additional (same treatment), dedupes by url. */
+  function getConfigForSelection() {
+    var browsers = getSelectedBrowsers();
+    var os = getSelectedOS();
+    if (!browsers.length || !os) return [];
+    var seen = {};
+    var merged = [];
+    browsers.forEach(function (browser) {
+      var key = browser + "|" + os;
+      var items = CONFIG_OPTIONS[key] || [];
+      items.forEach(function (item) {
+        if (!seen[item.url]) {
+          seen[item.url] = true;
+          merged.push(item);
+        }
+      });
+    });
+    CONFIG_OPTIONS_ADDITIONAL.forEach(function (item) {
+      if (!seen[item.url]) {
+        seen[item.url] = true;
+        merged.push(item);
+      }
     });
     return merged;
   }
@@ -209,6 +272,29 @@
       try { location.hash = step; } catch (e) { }
     }
     if (step === "results") updateUI();
+    if (step === "config") renderConfigStep();
+  }
+
+  /** Fills the config step with links for the current selection. */
+  function renderConfigStep() {
+    if (!configLinks || !configHint) return;
+    var items = getConfigForSelection();
+    configLinks.innerHTML = "";
+    if (items.length > 0) {
+      configHint.textContent = "Configuration guides for your selection:";
+      items.forEach(function (item) {
+        var li = document.createElement("li");
+        var a = document.createElement("a");
+        a.href = item.url;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = item.title;
+        li.appendChild(a);
+        configLinks.appendChild(li);
+      });
+    } else {
+      configHint.textContent = "No dedicated configuration guides for this browser and OS combination. You can still configure after install; see the deployment options in the next step for setup guides that may include config.";
+    }
   }
 
   /** Binds step navigation: CTA, Next, Back, Change selection. */
@@ -220,13 +306,19 @@
     if (btnNextBrowsers) btnNextBrowsers.addEventListener("click", function () { showStep("os"); updateUI(); });
 
     var btnNextOs = document.getElementById("btn-next-os");
-    if (btnNextOs) btnNextOs.addEventListener("click", function () { showStep("results"); });
+    if (btnNextOs) btnNextOs.addEventListener("click", function () { showStep("config"); });
 
     var btnBackOs = document.getElementById("btn-back-os");
     if (btnBackOs) btnBackOs.addEventListener("click", function () { showStep("browsers"); updateUI(); });
 
+    var btnBackConfig = document.getElementById("btn-back-config");
+    if (btnBackConfig) btnBackConfig.addEventListener("click", function () { showStep("os"); updateUI(); });
+
+    var btnNextConfig = document.getElementById("btn-next-config");
+    if (btnNextConfig) btnNextConfig.addEventListener("click", function () { showStep("results"); });
+
     var btnChange = document.getElementById("btn-change-selection");
-    if (btnChange) btnChange.addEventListener("click", function () { showStep("os"); updateUI(); });
+    if (btnChange) btnChange.addEventListener("click", function () { showStep("browsers"); updateUI(); });
   }
 
   /* ----- Initialise: attach listeners, restore step from hash, render ----- */
@@ -236,6 +328,6 @@
     var hash = typeof location !== "undefined" && location.hash ? location.hash.slice(1) : "";
     var step = STEP_ORDER.indexOf(hash) !== -1 ? hash : "intro";
     showStep(step);
-    if (step !== "results") updateUI();
+    if (step !== "results" && step !== "config") updateUI();
   })();
 })();
