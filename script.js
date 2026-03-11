@@ -47,10 +47,10 @@
   var choiceHint = document.getElementById("choice-hint");
 
   /* ----- Selection helpers ----- */
-  /** Returns the currently selected browser (chrome | edge | firefox) or null. */
-  function getSelectedBrowser() {
-    var btn = document.querySelector('.option-btn[data-browser][aria-pressed="true"]');
-    return btn ? btn.getAttribute("data-browser") : null;
+  /** Returns an array of selected browser ids (chrome | edge | firefox). Multiple allowed. */
+  function getSelectedBrowsers() {
+    var buttons = document.querySelectorAll('.option-btn[data-browser][aria-pressed="true"]');
+    return Array.prototype.map.call(buttons, function (btn) { return btn.getAttribute("data-browser"); });
   }
 
   /** Returns the currently selected OS (windows | macos) or null. */
@@ -59,13 +59,24 @@
     return btn ? btn.getAttribute("data-os") : null;
   }
 
-  /** Returns the array of deployment options for the current browser and OS combination. */
+  /** Returns the array of deployment options for the current browser(s) and OS. Merges and dedupes by option id. */
   function getOptionsForSelection() {
-    var browser = getSelectedBrowser();
+    var browsers = getSelectedBrowsers();
     var os = getSelectedOS();
-    if (!browser || !os) return [];
-    var key = browser + "|" + os;
-    return OPTIONS_MATRIX[key] || [];
+    if (!browsers.length || !os) return [];
+    var seen = {};
+    var merged = [];
+    browsers.forEach(function (browser) {
+      var key = browser + "|" + os;
+      var opts = OPTIONS_MATRIX[key] || [];
+      opts.forEach(function (opt) {
+        if (!seen[opt.id]) {
+          seen[opt.id] = true;
+          merged.push(opt);
+        }
+      });
+    });
+    return merged;
   }
 
   /* ----- Rendering ----- */
@@ -148,30 +159,35 @@
     if (opts.length > 0) {
       optionsSection.hidden = false;
       summarySection.hidden = false;
-      choiceHint.textContent = "Deployment options and setup guides for your selection are below.";
+      var browsers = getSelectedBrowsers();
+      var os = getSelectedOS();
+      var browserLabel = browsers.length > 1
+        ? browsers.slice(0, -1).join(", ") + " and " + browsers[browsers.length - 1]
+        : browsers[0];
+      choiceHint.textContent = "Deployment options and setup guides for " + browserLabel + " on " + os + " are below.";
       opts.forEach(function (opt) {
         optionsContainer.appendChild(renderOptionCard(opt));
       });
       renderSummaryLinks(opts);
     } else {
-      var browser = getSelectedBrowser();
+      var browsers = getSelectedBrowsers();
       var os = getSelectedOS();
       optionsSection.hidden = true;
       summarySection.hidden = true;
-      if (browser && os) {
+      if (browsers.length && os) {
         choiceHint.textContent = "No managed deployment options for this browser and OS combination. Consider manual install for testing only (see below), or choose a different browser/OS.";
       } else {
-        choiceHint.textContent = "Select a browser and an operating system to see deployment options.";
+        choiceHint.textContent = "Select at least one browser and an operating system to see deployment options.";
       }
     }
   }
 
-  /** Binds click handlers to browser and OS toggle buttons; updates aria-pressed and refreshes UI. */
+  /** Binds click handlers: browsers multi-select (toggle), OS single-select; refreshes UI. */
   function setupOptionButtons() {
     document.querySelectorAll(".option-btn[data-browser]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        document.querySelectorAll(".option-btn[data-browser]").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
-        btn.setAttribute("aria-pressed", "true");
+        var pressed = btn.getAttribute("aria-pressed") === "true";
+        btn.setAttribute("aria-pressed", pressed ? "false" : "true");
         updateUI();
       });
     });
