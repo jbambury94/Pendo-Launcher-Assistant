@@ -80,26 +80,24 @@ body {
   margin: 0 auto;
   display: flex;
   align-items: baseline;
-  gap: 0;
+  gap: var(--space-sm);
 }
 
-/* Horizontal lockup: Pendo wordmark + chevron. Min width 100px (brand guide). */
 .logo-wrap {
   display: inline-flex;
   align-items: baseline;
   gap: 2px;
-  min-width: 100px;
 }
 
 .logo {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.5rem;
+  font-size: 1.375rem;
   letter-spacing: -0.02em;
   color: var(--pendo-white);
 }
 
-/* Chevron: Pendo growth symbol — points up and to the right; white or pink only (brand guide). */
+/* Chevron: Pendo growth symbol (points up-right) */
 .logo-chevron {
   color: var(--pendo-pank);
   font-size: var(--logo-chevron-size);
@@ -107,7 +105,6 @@ body {
   line-height: 1;
 }
 
-/* Clearspace: 1× chevron between logo and other elements (brand guide). */
 .logo-product {
   font-family: var(--font-body);
   font-weight: 500;
@@ -115,7 +112,6 @@ body {
   color: var(--pendo-mid-gray);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  margin-left: var(--logo-chevron-size);
 }
 
 /* ----- Main content ----- */
@@ -471,123 +467,6 @@ body {
 .config-links {
   margin-top: var(--space-sm);
   margin-bottom: 0;
-}
-
-/* ----- Config step: selectable cards and checklist ----- */
-.config-cards-grid {
-  margin-bottom: var(--space-xl);
-}
-
-.config-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.config-card-label {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-xs);
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.9375rem;
-}
-
-.config-card-checkbox {
-  flex-shrink: 0;
-}
-
-.config-card-caps {
-  font-weight: 500;
-  font-size: 0.8125rem;
-  color: var(--color-text-muted);
-}
-
-.config-checklist {
-  margin-bottom: var(--space-xl);
-}
-
-.config-checklist-title {
-  font-weight: 600;
-  font-size: 0.9375rem;
-  margin: 0 0 var(--space-sm);
-  color: var(--color-text);
-}
-
-.config-checklist-list {
-  margin: 0;
-  padding-left: 1.25rem;
-  list-style: none;
-}
-
-.config-checklist-list li {
-  margin-bottom: var(--space-xs);
-}
-
-.config-checklist-ok {
-  color: var(--pendo-darkle);
-}
-
-.config-checklist-missing {
-  color: var(--pendo-pank);
-  font-weight: 500;
-}
-
-.config-checklist-warn {
-  color: var(--color-text-muted);
-}
-
-.config-data-env {
-  margin-bottom: var(--space-xl);
-}
-
-/* ----- Modal: dataEnvironment reminder ----- */
-.modal {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-lg);
-}
-
-.modal-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(6, 1, 25, 0.5);
-}
-
-.modal-content {
-  position: relative;
-  max-width: 480px;
-  max-height: 90vh;
-  overflow: auto;
-  background: var(--color-bg);
-  border-radius: var(--radius-lg);
-  padding: var(--space-xl);
-  box-shadow: var(--shadow-card);
-}
-
-.modal-content p {
-  margin: 0 0 var(--space-md);
-  font-size: 0.9375rem;
-}
-
-.modal-content p:last-of-type {
-  margin-bottom: var(--space-lg);
-}
-
-.modal-content code {
-  font-size: 0.875em;
-  background: var(--color-bg-subtle);
-  padding: 0.1em 0.35em;
-  border-radius: var(--radius-sm);
-}
-
-.modal-content .cta-button {
-  margin-top: var(--space-sm);
 }
 
 /* ----- Manual install: testing and demo only; highlighted warning ----- */

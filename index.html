@@ -68,49 +68,37 @@
         </div>
       </section>
 
-      <!-- Step 3: OS multi-select -->
+      <!-- Step 3: OS single-select -->
       <section id="step-os" class="step-panel" hidden aria-labelledby="step-os-title">
-        <h2 id="step-os-title" class="section-title">Choose your operating systems</h2>
-        <p class="section-intro">Select one or more operating systems you plan to deploy to. You can select multiple.</p>
+        <h2 id="step-os-title" class="section-title">Choose your operating system</h2>
+        <p class="section-intro">Select the operating system you plan to deploy to.</p>
         <div class="choice-row choice-row-single">
           <fieldset class="fieldset">
             <legend class="fieldset-legend">Operating system</legend>
-            <div class="option-buttons" role="group" aria-label="Operating system selection" aria-multiselectable="true">
+            <div class="option-buttons" role="group" aria-label="Operating system selection">
               <button type="button" class="option-btn" data-os="windows" aria-pressed="false">Windows</button>
               <button type="button" class="option-btn" data-os="macos" aria-pressed="false">macOS</button>
             </div>
           </fieldset>
         </div>
-        <p id="choice-hint-os" class="choice-hint" aria-live="polite">Select at least one operating system.</p>
+        <p id="choice-hint-os" class="choice-hint" aria-live="polite">Select your operating system.</p>
         <div class="step-actions">
           <button type="button" id="btn-back-os" class="button-secondary">Back</button>
           <button type="button" id="btn-next-os" class="cta-button" disabled>Next</button>
         </div>
       </section>
 
-      <!-- Step 4: Config options (selectable cards with pros/cons, checklist, dataEnvironment) -->
+      <!-- Step 4: Config options (Configure section links filtered by browsers + OS) -->
       <section id="step-config" class="step-panel" hidden aria-labelledby="step-config-title">
         <h2 id="step-config-title" class="section-title">Configure</h2>
-        <p class="section-intro">Select the configuration options you plan to use. The Launcher requires an API key and Visitor ID; metadata is recommended. Confirm your choices below before continuing.</p>
+        <p class="section-intro">After install, use these guides to configure Visitor ID, metadata, and other Launcher settings for your chosen browser and OS.</p>
         <p id="config-hint" class="choice-hint" aria-live="polite"></p>
-        <div id="config-cards-container" class="options-grid config-cards-grid"></div>
-        <div id="config-checklist" class="config-checklist" aria-live="polite">
-          <p class="config-checklist-title">Configuration checklist</p>
-          <ul id="config-checklist-list" class="config-checklist-list"></ul>
-        </div>
-        <div class="config-data-env" role="group" aria-labelledby="config-data-env-legend">
-          <p id="config-data-env-legend" class="fieldset-legend">Is your Pendo subscription on the EU or another non-.io data environment?</p>
-          <div class="option-buttons" role="group" aria-label="Data environment">
-            <button type="button" class="option-btn" id="data-env-no" data-data-env="no" aria-pressed="false">No (default .io)</button>
-            <button type="button" class="option-btn" id="data-env-yes" data-data-env="yes" aria-pressed="false">Yes (e.g. EU)</button>
-          </div>
-        </div>
+        <ul id="config-links" class="summary-links config-links"></ul>
         <div class="step-actions">
           <button type="button" id="btn-back-config" class="button-secondary">Back</button>
           <button type="button" id="btn-next-config" class="cta-button">Next: deployment options</button>
         </div>
       </section>
-
 
       <!-- Step 5: Results (deployment options + summary + manual install) -->
       <section id="step-results" class="step-panel" hidden aria-labelledby="options-title">
@@ -135,18 +123,6 @@
           <button type="button" id="btn-change-selection" class="button-secondary">Change selection</button>
         </div>
       </section>
-    </div>
-
-    <!-- Modal: dataEnvironment reminder (outside step container so it can overlay) -->
-    <div id="data-env-modal" class="modal" role="dialog" aria-labelledby="data-env-modal-title" aria-modal="true" hidden>
-      <div class="modal-backdrop" id="data-env-modal-backdrop"></div>
-      <div class="modal-content">
-        <h2 id="data-env-modal-title" class="section-title">Check your dataEnvironment value</h2>
-        <p>If your subscription is stored in a different data environment (e.g. EU for GDPR), you must set the <strong>dataEnvironment</strong> property when configuring the Launcher. Default is <code>io</code>; other values include <code>us1</code>, <code>eu</code>, <code>jpn</code>, and <code>au</code>.</p>
-        <p>Find it in Pendo under <strong>Settings &gt; Subscription settings &gt; Extension</strong>. Double-check that the value matches your subscription's data environment.</p>
-        <p><a href="https://support.pendo.io/hc/en-us/articles/21164568842395-IT-guide-to-deploying-the-Pendo-Launcher#:~:text=settings%20%3E%20Extension.-,dataEnvironment,-This%20property%20is" target="_blank" rel="noopener noreferrer">IT guide: dataEnvironment (opens in new tab)</a></p>
-        <button type="button" id="data-env-modal-close" class="cta-button">Got it</button>
-      </div>
     </div>
   </main>
 
