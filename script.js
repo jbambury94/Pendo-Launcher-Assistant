@@ -94,28 +94,54 @@
     return Array.prototype.map.call(buttons, function (btn) { return btn.getAttribute("data-browser"); });
   }
 
-  /** Returns the currently selected OS (windows | macos) or null. */
-  function getSelectedOS() {
-    var btn = document.querySelector('.option-btn[data-os][aria-pressed="true"]');
-    return btn ? btn.getAttribute("data-os") : null;
+  /** Returns an array of selected OS ids (windows | macos). Multiple allowed. */
+  function getSelectedOSes() {
+    var buttons = document.querySelectorAll('.option-btn[data-os][aria-pressed="true"]');
+    return Array.prototype.map.call(buttons, function (btn) { return btn.getAttribute("data-os"); });
   }
 
-  /** Returns the array of deployment options for the current browser(s) and OS. Merges and dedupes by option id. */
+  /** Returns deployment options for the current browser(s) and OS(es). One entry per (browser, os) combo with browser and os attached for labelling. */
   function getOptionsForSelection() {
     var browsers = getSelectedBrowsers();
-    var os = getSelectedOS();
-    if (!browsers.length || !os) return [];
+    var oses = getSelectedOSes();
+    if (!browsers.length || !oses.length) return [];
+    var result = [];
+    browsers.forEach(function (browser) {
+      oses.forEach(function (os) {
+        var key = browser + "|" + os;
+        var opts = OPTIONS_MATRIX[key] || [];
+        opts.forEach(function (opt) {
+          result.push({ opt: opt, browser: browser, os: os });
+        });
+      });
+    });
+    return result;
+  }
+
+  /** Returns config options for the current browser(s) and OS(es). Merges browser|os-specific + additional, dedupes by id. */
+  function getConfigForSelection() {
+    var browsers = getSelectedBrowsers();
+    var oses = getSelectedOSes();
+    if (!browsers.length || !oses.length) return [];
     var seen = {};
     var merged = [];
     browsers.forEach(function (browser) {
-      var key = browser + "|" + os;
-      var opts = OPTIONS_MATRIX[key] || [];
-      opts.forEach(function (opt) {
-        if (!seen[opt.id]) {
-          seen[opt.id] = true;
-          merged.push(opt);
-        }
+      oses.forEach(function (os) {
+        var key = browser + "|" + os;
+        var items = CONFIG_OPTIONS[key] || [];
+        items.forEach(function (item) {
+          if (!seen[item.id]) {
+            seen[item.id] = true;
+            merged.push(item);
+          }
+        });
       });
+    });
+    CONFIG_OPTIONS_ADDITIONAL.forEach(function (item) {
+      if (!seen[item.id]) {
+        seen[item.id] = true;
+        merged.push(item);
+      }
     });
     return merged;
   }
@@ -153,8 +179,11 @@
     var card = document.createElement("div");
     card.className = "option-card";
     card.setAttribute("data-option-id", opt.id);
+    card.setAttribute("data-browser", browser);
+    card.setAttribute("data-os", os);
 
-    var prosConsId = "pros-cons-" + opt.id;
+    var label = formatBrowserOsLabel(browser, os);
+    var prosConsId = "pros-cons-" + opt.id + "-" + browser + "-" + os;
     var prosItems = (opt.pros || []).map(function (p) { return "<li>" + escapeHtml(p) + "</li>"; }).join("");
     var consItems = (opt.cons || []).map(function (c) { return "<li>" + escapeHtml(c) + "</li>"; }).join("");
     var hasProsCons = (opt.pros && opt.pros.length) || (opt.cons && opt.cons.length);
@@ -167,6 +196,7 @@
     }
 
     card.innerHTML =
+      "<span class=\"option-card-badge\" aria-label=\"For " + escapeAttr(label) + "\">" + escapeHtml(label) + "</span>" +
       "<h3>" + escapeHtml(opt.title) + "</h3>" +
       "<p class=\"option-desc\">" + escapeHtml(opt.desc) + "</p>" +
       (url ? "<a href=\"" + escapeAttr(url) + "\" class=\"option-link\" target=\"_blank\" rel=\"noopener noreferrer\">View setup guide</a>" : "") +
@@ -187,10 +217,11 @@
     return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
-  /** Fills the summary section with one link per option (to Pendo support articles). */
-  function renderSummaryLinks(opts) {
+  /** Fills the summary section with one link per option (to Pendo support articles), labelled by browser/OS. */
+  function renderSummaryLinks(items) {
     summaryLinks.innerHTML = "";
-    opts.forEach(function (opt) {
+    items.forEach(function (item) {
+      var opt = item.opt;
       var url = SUPPORT_URLS[opt.id];
       if (!url) return;
       var li = document.createElement("li");
@@ -198,7 +229,7 @@
       a.href = url;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
-      a.textContent = opt.title + " — View setup guide";
+      a.textContent = opt.title + " (" + formatBrowserOsLabel(item.browser, item.os) + ") — View setup guide";
       li.appendChild(a);
       summaryLinks.appendChild(li);
     });
@@ -244,7 +275,7 @@
     }
   }
 
-  /** Binds click handlers: browsers multi-select (toggle), OS single-select; refreshes UI. */
+  /** Binds click handlers: browsers and OS multi-select (toggle); refreshes UI. */
   function setupOptionButtons() {
     document.querySelectorAll(".option-btn[data-browser]").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -255,8 +286,8 @@
     });
     document.querySelectorAll(".option-btn[data-os]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        document.querySelectorAll(".option-btn[data-os]").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
-        btn.setAttribute("aria-pressed", "true");
+        var pressed = btn.getAttribute("aria-pressed") === "true";
+        btn.setAttribute("aria-pressed", pressed ? "false" : "true");
         updateUI();
       });
     });
