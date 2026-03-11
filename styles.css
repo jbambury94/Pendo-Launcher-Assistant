@@ -1,11 +1,13 @@
 /*
   Pendo Launcher Deployment Decision App — Styles
-  Pendo branding: Pank (signature pink), Blurple, neutrals. Typography: Sora, Inter.
+  Brand: https://www.pendo.io/brand-guide/logo/
+  Typography: https://www.pendo.io/brand-guide/typography/ (Sora = display, Inter = workhorse)
+  Color: https://www.pendo.io/brand-guide/color/ (Pank #FF4876 = signature pink, primary)
   British English used in comments.
 */
 
 :root {
-  /* Pendo colour palette (primary, secondary, neutrals) */
+  /* Pendo colour palette — Pank is primary per brand guide; Blurple/secondaries for UI variety */
   --pendo-pank: #FF4876;
   --pendo-blurple: #4546E0;
   --pendo-off-black: #060119;
@@ -26,9 +28,12 @@
   --color-warning-bg: #FFF0F4;
   --color-warning-border: var(--pendo-pank);
 
-  /* Typography: display (headings) and body */
+  /* Typography — Sora (display/headlines), Inter (body/data) per Pendo typography guide */
   --font-display: "Sora", sans-serif;
   --font-body: "Inter", sans-serif;
+
+  /* Logo: minimum 100px wide digitally; clearspace = 1× chevron */
+  --logo-chevron-size: 1.25rem;
 
   /* Spacing scale */
   --space-xs: 0.25rem;
@@ -63,6 +68,7 @@ body {
 }
 
 /* ----- Header ----- */
+/* Logo: primary light lockup on dark (wordmark + chevron). Chevron = white or pink only; points up-right. */
 .header {
   background: var(--pendo-off-black);
   color: var(--pendo-white);
@@ -94,7 +100,7 @@ body {
 /* Chevron: Pendo growth symbol (points up-right) */
 .logo-chevron {
   color: var(--pendo-pank);
-  font-size: 1.25rem;
+  font-size: var(--logo-chevron-size);
   font-weight: 700;
   line-height: 1;
 }
@@ -338,13 +344,26 @@ body {
   }
 }
 
-/* Single deployment option card: title, description, "View setup guide" link, expandable pros/cons */
+/* Single deployment option card: badge (browser · OS), title, description, link, pros/cons */
 .option-card {
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   box-shadow: var(--shadow-card);
+}
+
+.option-card-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--pendo-blurple);
+  background: var(--color-bg-subtle);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-sm);
 }
 
 .option-card h3 {
