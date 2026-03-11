@@ -73,21 +73,39 @@ body {
   max-width: 960px;
   margin: 0 auto;
   display: flex;
-  align-items: center;
-  gap: var(--space-xs);
+  align-items: baseline;
+  gap: var(--space-sm);
+}
+
+.logo-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
 }
 
 .logo {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.25rem;
+  font-size: 1.375rem;
+  letter-spacing: -0.02em;
+  color: var(--pendo-white);
 }
 
-/* Chevron points up-right (Pendo growth symbol) */
+/* Chevron: Pendo growth symbol (points up-right) */
 .logo-chevron {
   color: var(--pendo-pank);
   font-size: 1.25rem;
   font-weight: 700;
+  line-height: 1;
+}
+
+.logo-product {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  color: var(--pendo-mid-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 /* ----- Main content ----- */
@@ -97,8 +115,92 @@ body {
   padding: var(--space-xl) var(--space-lg);
 }
 
+/* Step-based flow: one panel visible at a time */
+.step-container {
+  min-height: 40vh;
+}
+
+.step-panel {
+  animation: stepIn 0.2s ease-out;
+}
+
+@keyframes stepIn {
+  from {
+    opacity: 0.97;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.step-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+  align-items: center;
+}
+
+.cta-button {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: var(--space-sm) var(--space-lg);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--pendo-pank);
+  color: var(--pendo-white);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.cta-button:hover:not(:disabled) {
+  background: #e63d65;
+}
+
+.cta-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cta-button:focus {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.button-secondary {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  padding: var(--space-sm) var(--space-md);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.button-secondary:hover {
+  border-color: var(--pendo-blurple);
+  background: var(--color-bg-subtle);
+}
+
+.button-secondary:focus {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.choice-row-single {
+  margin-bottom: var(--space-md);
+}
+
 .section {
   margin-bottom: var(--space-2xl);
+}
+
+.section-options-inline {
+  margin-bottom: var(--space-lg);
 }
 
 .section-hero {
@@ -280,32 +382,15 @@ body {
   box-shadow: var(--shadow-focus);
 }
 
-/* Expandable pros and cons; aria-expanded toggled by script */
-.pros-cons-toggle {
-  font-family: var(--font-body);
+/* Pros and cons: visible by default under each option card */
+.pros-cons-heading {
+  margin: 0 0 0.25rem 0;
+  font-weight: 600;
   font-size: 0.875rem;
-  font-weight: 500;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--pendo-blurple);
-  cursor: pointer;
-  text-align: left;
-  margin-bottom: var(--space-sm);
 }
 
-.pros-cons-toggle:hover {
-  text-decoration: underline;
-}
-
-.pros-cons-toggle:focus {
-  outline: none;
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-focus);
-}
-
-.pros-cons-toggle[aria-expanded="true"] {
-  margin-bottom: var(--space-sm);
+.pros-cons-heading-cons {
+  margin-top: 0.5rem;
 }
 
 .pros-cons-content {
@@ -313,6 +398,7 @@ body {
   background: var(--color-bg-subtle);
   border-radius: var(--radius-md);
   font-size: 0.875rem;
+  margin-top: var(--space-sm);
 }
 
 .pros-cons-content ul {

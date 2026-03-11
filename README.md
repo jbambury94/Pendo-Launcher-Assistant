@@ -4,10 +4,11 @@ A simple web app that helps project managers decide how to configure and deploy 
 
 ## What it does
 
+- **Step-based flow** — Intro → Choose browsers → Choose OS → Results. One step at a time; no scrolling to find the next choice.
 - **Pre-deploy checklist** — Reminds you to align with dev, security, privacy, and IT before rollout.
-- **Browser & OS selection** — Choose Chrome, Edge, or Firefox and Windows or macOS to see only relevant deployment methods.
-- **Deployment options** — Each option is shown as a card with a short description, pros and cons, and a **View setup guide** link to the official Pendo support article.
-- **Summary links** — After you select browser/OS, a “Setup guides for your selection” section lists direct links to each method’s Pendo article.
+- **Browser & OS selection** — Select one or more browsers (Chrome, Edge, Firefox) and one OS (Windows or macOS) to see only relevant deployment methods.
+- **Deployment options** — Each option is shown as a card with a short description, pros and cons visible by default, and a **View setup guide** link to the official Pendo support article.
+- **Summary links** — After you complete the flow, a “Setup guides for your selection” section lists direct links to each method’s Pendo article.
 - **Manual install (testing only)** — Clearly labelled option and link for manual install, with a warning that it’s for testing and demo only, not production.
 
 ## How to run
@@ -26,18 +27,33 @@ No build step. Open the app in a browser:
 
 ## Tech stack
 
-- **HTML** — Single page, semantic sections.
+- **HTML** — Single page with step panels (intro, browsers, OS, results).
 - **CSS** — One stylesheet with Pendo branding (Pank, Blurple, Sora/Inter).
-- **JavaScript** — Vanilla JS for browser/OS selection, option cards, and summary links. No frameworks.
+- **JavaScript** — Vanilla JS for step flow, multi-browser/OS selection, option cards, and summary links. No frameworks.
+
+## Version control and branching
+
+- **Default branch** — `main` (or `master`) is the primary branch; production-ready work is merged here.
+- **Feature work** — Create a branch for changes (e.g. `feature/revised-website` or `revise-website`):
+  ```bash
+  git checkout -b feature/revised-website
+  ```
+- **Push and test** — Push your branch to the remote and open a pull request, or test locally:
+  ```bash
+  git add -A && git commit -m "Your message"
+  git push -u origin feature/revised-website
+  ```
+- **Merging** — After review and testing, merge the feature branch into the default branch. See [VERSION_CONTROL.md](VERSION_CONTROL.md) for more detail.
 
 ## Project structure
 
 ```
 .
-├── index.html   # Page structure: landing, checklist, browser/OS choice, options, summary, manual install
-├── styles.css   # Pendo-themed layout and components
-├── script.js    # Options matrix, rendering, and interactivity
+├── index.html        # Step-based layout: intro, browsers, OS, results
+├── styles.css        # Pendo-themed layout and components
+├── script.js        # Step flow, options matrix, rendering, and interactivity
 ├── README.md
+├── VERSION_CONTROL.md
 ├── LICENSE
 └── .gitignore
 ```
