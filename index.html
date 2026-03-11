@@ -1,15 +1,22 @@
 <!DOCTYPE html>
+<!--
+  Pendo Launcher Deployment Decision App
+  Single-page guide for project managers to choose deployment options by browser and OS.
+  Content based on Pendo IT guide; manual install is for testing only.
+-->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pendo Launcher: Deployment and Configuration Guide</title>
+  <!-- Google Fonts: Sora (headings), Inter (body) per Pendo branding -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- Site header with Pendo wordmark and chevron -->
   <header class="header">
     <div class="header-inner">
       <span class="logo">Pendo</span>
@@ -18,14 +25,13 @@
   </header>
 
   <main class="main">
-    <!-- 1. Landing -->
+    <!-- 1. Landing: title and short intro from IT guide -->
     <section class="section section-hero" aria-labelledby="hero-title">
       <h1 id="hero-title" class="hero-title">Pendo Launcher: deployment and configuration guide</h1>
       <p class="hero-intro">Use this guide to decide how to deploy and configure the Pendo Launcher browser extension across your organization. Choose your browser and operating system to see recommended deployment options and weigh the pros and cons of each path.</p>
     </section>
 
-    <!-- 2. Pre-deploy checklist -->
-    <section class="section section-checklist" aria-labelledby="checklist-title">
+    <!-- 2. Pre-deploy checklist: align teams, browser/OS, Visitor ID, metadata, JavaScript -->
       <h2 id="checklist-title" class="section-title">Before you deploy</h2>
       <p class="section-intro">Coordinate with your teams and confirm these items before rolling out the Pendo Launcher.</p>
       <ul class="checklist">
@@ -37,13 +43,13 @@
       </ul>
     </section>
 
-    <!-- 3. Path selection -->
-    <section class="section section-choice" aria-labelledby="choice-title">
+    <!-- 3. Path selection: browser and OS buttons; options shown after both are chosen -->
       <h2 id="choice-title" class="section-title">Choose your environment</h2>
       <p class="section-intro">Select the browser and operating system you plan to deploy to. We’ll show only the deployment options that apply.</p>
       <div class="choice-row">
         <fieldset class="fieldset">
           <legend class="fieldset-legend">Browser</legend>
+          <!-- Toggle group: one of Chrome, Edge, Firefox (script.js drives behaviour) -->
           <div class="option-buttons" role="group" aria-label="Browser selection">
             <button type="button" class="option-btn" data-browser="chrome" aria-pressed="false">Chrome</button>
             <button type="button" class="option-btn" data-browser="edge" aria-pressed="false">Edge</button>
@@ -52,30 +58,32 @@
         </fieldset>
         <fieldset class="fieldset">
           <legend class="fieldset-legend">Operating system</legend>
+          <!-- Toggle group: Windows or macOS -->
           <div class="option-buttons" role="group" aria-label="Operating system selection">
             <button type="button" class="option-btn" data-os="windows" aria-pressed="false">Windows</button>
             <button type="button" class="option-btn" data-os="macos" aria-pressed="false">macOS</button>
           </div>
         </fieldset>
       </div>
+      <!-- Hint updated by script when selection changes (aria-live for screen readers) -->
       <p id="choice-hint" class="choice-hint" aria-live="polite">Select a browser and an operating system to see deployment options.</p>
     </section>
 
-    <!-- 4. Deployment options (dynamic) -->
+    <!-- 4. Deployment options: populated by script from options matrix; each card has "View setup guide" link and expandable pros/cons -->
     <section class="section section-options" aria-labelledby="options-title" id="deployment-options-section" hidden>
       <h2 id="options-title" class="section-title">Deployment options</h2>
       <p class="section-intro">Review each method and expand pros and cons to compare. Use “View setup guide” to open the official Pendo instructions.</p>
       <div id="options-container" class="options-grid"></div>
     </section>
 
-    <!-- 5. Summary links (end of workflow) -->
+    <!-- 5. End of workflow: summary list of direct links to Pendo support articles for the selected options -->
     <section class="section section-summary" aria-labelledby="summary-title" id="summary-section" hidden>
       <h2 id="summary-title" class="section-title">Setup guides for your selection</h2>
       <p class="section-intro">Jump directly to the Pendo support article for each deployment option above.</p>
       <ul id="summary-links" class="summary-links"></ul>
     </section>
 
-    <!-- 6. Manual install (testing only) -->
+    <!-- 6. Manual install: for testing and demo only; not for production rollout -->
     <section class="section section-manual" aria-labelledby="manual-title">
       <h2 id="manual-title" class="section-title section-title-warning">Manual install (testing and demo only)</h2>
       <div class="manual-warning" role="alert">
@@ -85,10 +93,12 @@
     </section>
   </main>
 
+  <!-- Footer with link back to Pendo IT guide -->
   <footer class="footer">
     <p class="footer-text">Based on the <a href="https://support.pendo.io/hc/en-us/articles/21164568842395-IT-guide-to-deploying-the-Pendo-Launcher" target="_blank" rel="noopener noreferrer">IT guide to deploying the Pendo Launcher</a>.</p>
   </footer>
 
+  <!-- Application logic: options matrix, selection, rendering, summary links -->
   <script src="script.js"></script>
 </body>
 </html>

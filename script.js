@@ -1,7 +1,12 @@
+/**
+ * Pendo Launcher Deployment Decision App — Application logic
+ * Populates deployment options and summary links based on browser/OS selection.
+ * British English used in comments.
+ */
 (function () {
   "use strict";
 
-  // Per-option support links (from Pendo support)
+  /* ----- Data: Pendo support article URLs per deployment option ----- */
   var SUPPORT_URLS = {
     "chrome-google-admin": "https://support.pendo.io/hc/en-us/articles/21165460738331-Install-on-Chrome-for-any-OS-using-Google-Admin-console",
     "chrome-intune": "https://support.pendo.io/hc/en-us/articles/21165368123163-Install-on-Chrome-for-Windows-using-Microsoft-Intune",
@@ -11,7 +16,7 @@
     "firefox-native-manifest": "https://support.pendo.io/hc/en-us/articles/21165614712731-Configure-on-Firefox-for-macOS-using-native-manifest"
   };
 
-  // Options matrix: key = "browser|os", value = array of option ids for that combo
+  /* ----- Options matrix: key is "browser|os", value is array of option objects (id, title, desc, pros, cons) ----- */
   var OPTIONS_MATRIX = {
     "chrome|windows": [
       { id: "chrome-google-admin", title: "Google Admin console", desc: "Force-install the extension across Chrome on any OS via Google Admin. Good if you already use Google Workspace.", pros: ["Works on any OS", "Automatic updates from Chrome Web Store", "Central management in Google Admin"], cons: ["Requires Google Workspace", "Cannot be used together with Intune for Chrome extension management"] },
@@ -34,22 +39,27 @@
     ]
   };
 
+  /* ----- DOM references ----- */
   var optionsSection = document.getElementById("deployment-options-section");
   var optionsContainer = document.getElementById("options-container");
   var summarySection = document.getElementById("summary-section");
   var summaryLinks = document.getElementById("summary-links");
   var choiceHint = document.getElementById("choice-hint");
 
+  /* ----- Selection helpers ----- */
+  /** Returns the currently selected browser (chrome | edge | firefox) or null. */
   function getSelectedBrowser() {
     var btn = document.querySelector('.option-btn[data-browser][aria-pressed="true"]');
     return btn ? btn.getAttribute("data-browser") : null;
   }
 
+  /** Returns the currently selected OS (windows | macos) or null. */
   function getSelectedOS() {
     var btn = document.querySelector('.option-btn[data-os][aria-pressed="true"]');
     return btn ? btn.getAttribute("data-os") : null;
   }
 
+  /** Returns the array of deployment options for the current browser and OS combination. */
   function getOptionsForSelection() {
     var browser = getSelectedBrowser();
     var os = getSelectedOS();
@@ -58,6 +68,8 @@
     return OPTIONS_MATRIX[key] || [];
   }
 
+  /* ----- Rendering ----- */
+  /** Builds one deployment option card: title, description, "View setup guide" link, expandable pros/cons. */
   function renderOptionCard(opt) {
     var url = SUPPORT_URLS[opt.id];
     var card = document.createElement("div");
@@ -84,6 +96,7 @@
         ? "<button type=\"button\" class=\"pros-cons-toggle\" aria-expanded=\"false\" aria-controls=\"" + prosConsId + "\" id=\"toggle-" + opt.id + "\">Pros &amp; cons</button>" + prosConsBody
         : "");
 
+    /* Wire up expand/collapse behaviour for pros and cons */
     if (hasProsCons) {
       var toggle = card.querySelector(".pros-cons-toggle");
       var content = card.querySelector(".pros-cons-content");
@@ -97,16 +110,19 @@
     return card;
   }
 
+  /** Escapes text for safe insertion into HTML (prevents XSS). */
   function escapeHtml(s) {
     var div = document.createElement("div");
     div.textContent = s;
     return div.innerHTML;
   }
 
+  /** Escapes a string for safe use in an HTML attribute. */
   function escapeAttr(s) {
     return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
+  /** Fills the summary section with one link per option (to Pendo support articles). */
   function renderSummaryLinks(opts) {
     summaryLinks.innerHTML = "";
     opts.forEach(function (opt) {
@@ -123,6 +139,7 @@
     });
   }
 
+  /** Updates deployment options, summary links, and hint text based on current browser/OS selection. */
   function updateUI() {
     var opts = getOptionsForSelection();
     optionsContainer.innerHTML = "";
@@ -149,6 +166,7 @@
     }
   }
 
+  /** Binds click handlers to browser and OS toggle buttons; updates aria-pressed and refreshes UI. */
   function setupOptionButtons() {
     document.querySelectorAll(".option-btn[data-browser]").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -166,6 +184,7 @@
     });
   }
 
+  /* ----- Initialise: attach listeners and render initial state ----- */
   setupOptionButtons();
   updateUI();
 })();

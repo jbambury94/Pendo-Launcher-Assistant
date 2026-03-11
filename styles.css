@@ -1,7 +1,11 @@
-/* Pendo Launcher Deployment Guide - Pendo branding */
+/*
+  Pendo Launcher Deployment Decision App — Styles
+  Pendo branding: Pank (signature pink), Blurple, neutrals. Typography: Sora, Inter.
+  British English used in comments.
+*/
 
 :root {
-  /* Pendo palette */
+  /* Pendo colour palette (primary, secondary, neutrals) */
   --pendo-pank: #FF4876;
   --pendo-blurple: #4546E0;
   --pendo-off-black: #060119;
@@ -11,7 +15,7 @@
   --pendo-light-gray: #EFEEF2;
   --pendo-white: #FFFFFF;
 
-  /* Semantic */
+  /* Semantic tokens: background, text, accent, border, warning */
   --color-bg: var(--pendo-white);
   --color-bg-subtle: var(--pendo-light-gray);
   --color-text: var(--pendo-off-black);
@@ -22,9 +26,11 @@
   --color-warning-bg: #FFF0F4;
   --color-warning-border: var(--pendo-pank);
 
+  /* Typography: display (headings) and body */
   --font-display: "Sora", sans-serif;
   --font-body: "Inter", sans-serif;
 
+  /* Spacing scale */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
@@ -32,14 +38,15 @@
   --space-xl: 2rem;
   --space-2xl: 3rem;
 
+  /* Border radius and shadows */
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
-
   --shadow-card: 0 2px 8px rgba(6, 1, 25, 0.06);
   --shadow-focus: 0 0 0 3px rgba(255, 72, 118, 0.35);
 }
 
+/* Reset: consistent box model */
 *,
 *::before,
 *::after {
@@ -55,7 +62,7 @@ body {
   background-color: var(--color-bg);
 }
 
-/* Header */
+/* ----- Header ----- */
 .header {
   background: var(--pendo-off-black);
   color: var(--pendo-white);
@@ -76,13 +83,14 @@ body {
   font-size: 1.25rem;
 }
 
+/* Chevron points up-right (Pendo growth symbol) */
 .logo-chevron {
   color: var(--pendo-pank);
   font-size: 1.25rem;
   font-weight: 700;
 }
 
-/* Main */
+/* ----- Main content ----- */
 .main {
   max-width: 960px;
   margin: 0 auto;
@@ -97,6 +105,7 @@ body {
   margin-bottom: var(--space-2xl);
 }
 
+/* Hero: landing title and intro paragraph */
 .hero-title {
   font-family: var(--font-display);
   font-weight: 700;
@@ -112,6 +121,7 @@ body {
   font-size: 1.0625rem;
 }
 
+/* Section headings and intro text */
 .section-title {
   font-family: var(--font-display);
   font-weight: 600;
@@ -129,7 +139,7 @@ body {
   color: var(--color-text-muted);
 }
 
-/* Checklist */
+/* ----- Pre-deploy checklist ----- */
 .checklist {
   margin: 0;
   padding-left: 1.25rem;
@@ -143,7 +153,7 @@ body {
   margin-bottom: 0;
 }
 
-/* Choice (browser / OS) */
+/* ----- Path selection: browser and OS toggle buttons ----- */
 .choice-row {
   display: flex;
   flex-wrap: wrap;
@@ -205,25 +215,28 @@ body {
   border-color: #e63d65;
 }
 
+/* Hint text updated by script (e.g. "Select browser and OS" or "Options below") */
 .choice-hint {
   margin: 0;
   font-size: 0.9375rem;
   color: var(--color-text-muted);
 }
 
-/* Options grid (deployment cards) */
+/* ----- Deployment options grid: cards filled by script ----- */
 .options-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-lg);
 }
 
+/* Multiple columns on wider viewports */
 @media (min-width: 640px) {
   .options-grid {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
 }
 
+/* Single deployment option card: title, description, "View setup guide" link, expandable pros/cons */
 .option-card {
   background: var(--color-bg);
   border: 1px solid var(--color-border);
@@ -267,6 +280,7 @@ body {
   box-shadow: var(--shadow-focus);
 }
 
+/* Expandable pros and cons; aria-expanded toggled by script */
 .pros-cons-toggle {
   font-family: var(--font-body);
   font-size: 0.875rem;
@@ -314,7 +328,7 @@ body {
   margin-bottom: 0;
 }
 
-/* Summary links */
+/* ----- End-of-workflow summary: list of links to Pendo support articles ----- */
 .summary-links {
   margin: 0;
   padding: 0;
@@ -345,7 +359,7 @@ body {
   box-shadow: var(--shadow-focus);
 }
 
-/* Manual install (testing only) */
+/* ----- Manual install: testing and demo only; highlighted warning ----- */
 .manual-warning {
   background: var(--color-warning-bg);
   border: 1px solid var(--color-warning-border);
@@ -384,12 +398,13 @@ body {
   box-shadow: var(--shadow-focus);
 }
 
+/* External link indicator (arrow) */
 .cta-link-external::after {
   content: " \2197";
   font-size: 0.75em;
 }
 
-/* Footer */
+/* ----- Footer ----- */
 .footer {
   max-width: 960px;
   margin: 0 auto;
