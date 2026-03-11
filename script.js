@@ -118,7 +118,7 @@
     return result;
   }
 
-  /** Returns config options for the current browser(s) and OS(es). Merges browser|os-specific + additional, dedupes by id. */
+  /** Returns config options for the current browser(s) and OS(es). Merges browser|os-specific + additional, dedupes by url. */
   function getConfigForSelection() {
     var browsers = getSelectedBrowsers();
     var oses = getSelectedOSes();
@@ -130,37 +130,11 @@
         var key = browser + "|" + os;
         var items = CONFIG_OPTIONS[key] || [];
         items.forEach(function (item) {
-          if (!seen[item.id]) {
-            seen[item.id] = true;
+          if (!seen[item.url]) {
+            seen[item.url] = true;
             merged.push(item);
           }
         });
-      });
-    });
-    CONFIG_OPTIONS_ADDITIONAL.forEach(function (item) {
-      if (!seen[item.id]) {
-        seen[item.id] = true;
-        merged.push(item);
-      }
-    });
-    return merged;
-  }
-
-  /** Returns config guide links for the current browser(s) and OS. Merges browser|os-specific + additional (same treatment), dedupes by url. */
-  function getConfigForSelection() {
-    var browsers = getSelectedBrowsers();
-    var os = getSelectedOS();
-    if (!browsers.length || !os) return [];
-    var seen = {};
-    var merged = [];
-    browsers.forEach(function (browser) {
-      var key = browser + "|" + os;
-      var items = CONFIG_OPTIONS[key] || [];
-      items.forEach(function (item) {
-        if (!seen[item.url]) {
-          seen[item.url] = true;
-          merged.push(item);
-        }
       });
     });
     CONFIG_OPTIONS_ADDITIONAL.forEach(function (item) {
@@ -172,9 +146,28 @@
     return merged;
   }
 
+  /** Display names for browser and OS ids (used for all user-facing labels). */
+  var BROWSER_LABELS = { chrome: "Chrome", edge: "Edge", firefox: "Firefox" };
+  var OS_LABELS = { windows: "Windows", macos: "macOS" };
+
+  /** Returns the display label for a single browser id (e.g. "Chrome"). */
+  function formatBrowserLabel(browser) {
+    return BROWSER_LABELS[browser] || browser;
+  }
+
+  /** Returns the display label for a single OS id (e.g. "Windows", "macOS"). */
+  function formatOsLabel(os) {
+    return OS_LABELS[os] || os;
+  }
+
+  /** Returns a display label for a browser and OS combo (e.g. "Chrome · Windows"). */
+  function formatBrowserOsLabel(browser, os) {
+    return formatBrowserLabel(browser) + " · " + formatOsLabel(os);
+  }
+
   /* ----- Rendering ----- */
-  /** Builds one deployment option card: title, description, "View setup guide" link, pros/cons visible by default. */
-  function renderOptionCard(opt) {
+  /** Builds one deployment option card: title, description, "View setup guide" link, pros/cons. Requires opt, browser, os. */
+  function renderOptionCard(opt, browser, os) {
     var url = SUPPORT_URLS[opt.id];
     var card = document.createElement("div");
     card.className = "option-card";
@@ -217,19 +210,30 @@
     return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
-  /** Fills the summary section with one link per option (to Pendo support articles), labelled by browser/OS. */
+  /** Fills the summary section with one link per unique deployment option (deduped by id), labelled by browser/OS combo(s). */
   function renderSummaryLinks(items) {
     summaryLinks.innerHTML = "";
+    var byId = {};
     items.forEach(function (item) {
       var opt = item.opt;
       var url = SUPPORT_URLS[opt.id];
       if (!url) return;
+      if (!byId[opt.id]) {
+        byId[opt.id] = { opt: opt, url: url, combos: [] };
+      }
+      byId[opt.id].combos.push(formatBrowserOsLabel(item.browser, item.os));
+    });
+    Object.keys(byId).forEach(function (id) {
+      var entry = byId[id];
+      var label = entry.combos.length > 1
+        ? entry.opt.title + " (" + entry.combos.join(", ") + ") — View setup guide"
+        : entry.opt.title + " (" + entry.combos[0] + ") — View setup guide";
       var li = document.createElement("li");
       var a = document.createElement("a");
-      a.href = url;
+      a.href = entry.url;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
-      a.textContent = opt.title + " (" + formatBrowserOsLabel(item.browser, item.os) + ") — View setup guide";
+      a.textContent = label;
       li.appendChild(a);
       summaryLinks.appendChild(li);
     });
@@ -238,39 +242,46 @@
   /** Updates hints, Next button states, and (when on results) deployment options and summary. */
   function updateUI() {
     var browsers = getSelectedBrowsers();
-    var os = getSelectedOS();
+    var oses = getSelectedOSes();
     var opts = getOptionsForSelection();
 
     if (choiceHintBrowsers) {
       choiceHintBrowsers.textContent = browsers.length
-        ? (browsers.length > 1 ? browsers.slice(0, -1).join(", ") + " and " + browsers[browsers.length - 1] + " selected." : browsers[0] + " selected.")
+        ? (browsers.length > 1
+          ? browsers.slice(0, -1).map(formatBrowserLabel).join(", ") + " and " + formatBrowserLabel(browsers[browsers.length - 1]) + " selected."
+          : formatBrowserLabel(browsers[0]) + " selected.")
         : "Select at least one browser.";
     }
     if (choiceHintOs) {
-      choiceHintOs.textContent = os
-        ? os + " selected."
-        : "Select your operating system.";
+      choiceHintOs.textContent = oses.length
+        ? (oses.length > 1
+          ? oses.slice(0, -1).map(formatOsLabel).join(", ") + " and " + formatOsLabel(oses[oses.length - 1]) + " selected."
+          : formatOsLabel(oses[0]) + " selected.")
+        : "Select at least one operating system.";
     }
 
     var btnNextBrowsers = document.getElementById("btn-next-browsers");
     var btnNextOs = document.getElementById("btn-next-os");
     if (btnNextBrowsers) btnNextBrowsers.disabled = browsers.length === 0;
-    if (btnNextOs) btnNextOs.disabled = !os;
+    if (btnNextOs) btnNextOs.disabled = oses.length === 0;
 
     if (currentStep === "results" && optionsContainer && summaryLinks) {
       optionsContainer.innerHTML = "";
       summaryLinks.innerHTML = "";
       if (opts.length > 0) {
         var browserLabel = browsers.length > 1
-          ? browsers.slice(0, -1).join(", ") + " and " + browsers[browsers.length - 1]
-          : browsers[0];
-        if (resultsIntro) resultsIntro.textContent = "Deployment options for " + browserLabel + " on " + os + ". Review each method and its pros and cons below. Use “View setup guide” to open the official Pendo instructions.";
-        opts.forEach(function (opt) {
-          optionsContainer.appendChild(renderOptionCard(opt));
+          ? browsers.slice(0, -1).map(formatBrowserLabel).join(", ") + " and " + formatBrowserLabel(browsers[browsers.length - 1])
+          : formatBrowserLabel(browsers[0]);
+        var osLabel = oses.length > 1
+          ? oses.slice(0, -1).map(formatOsLabel).join(", ") + " and " + formatOsLabel(oses[oses.length - 1])
+          : formatOsLabel(oses[0]);
+        if (resultsIntro) resultsIntro.textContent = "Deployment options for " + browserLabel + " on " + osLabel + ". Review each method and its pros and cons below. Use “View setup guide” to open the official Pendo instructions.";
+        opts.forEach(function (item) {
+          optionsContainer.appendChild(renderOptionCard(item.opt, item.browser, item.os));
         });
         renderSummaryLinks(opts);
       } else {
-        if (resultsIntro) resultsIntro.textContent = "No managed deployment options for this browser and OS combination. Consider manual install for testing only (see below), or change your selection.";
+        if (resultsIntro) resultsIntro.textContent = "No managed deployment options for your browser and OS selection. Consider manual install for testing only (see below), or change your selection.";
       }
     }
   }
@@ -324,7 +335,7 @@
         configLinks.appendChild(li);
       });
     } else {
-      configHint.textContent = "No dedicated configuration guides for this browser and OS combination. You can still configure after install; see the deployment options in the next step for setup guides that may include config.";
+      configHint.textContent = "No dedicated configuration guides for your browser and OS selection. You can still configure after install; see the deployment options in the next step for setup guides that may include config.";
     }
   }
 
