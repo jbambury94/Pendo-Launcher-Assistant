@@ -31,20 +31,6 @@ No build step. Open the app in a browser:
 - **CSS** — One stylesheet with Pendo branding (Pank, Blurple, Sora/Inter).
 - **JavaScript** — Vanilla JS for step flow, multi-browser/OS selection, option cards, and summary links. No frameworks.
 
-## Version control and branching
-
-- **Default branch** — `main` (or `master`) is the primary branch; production-ready work is merged here.
-- **Feature work** — Create a branch for changes (e.g. `feature/revised-website` or `revise-website`):
-  ```bash
-  git checkout -b feature/revised-website
-  ```
-- **Push and test** — Push your branch to the remote and open a pull request, or test locally:
-  ```bash
-  git add -A && git commit -m "Your message"
-  git push -u origin feature/revised-website
-  ```
-- **Merging** — After review and testing, merge the feature branch into the default branch. See [VERSION_CONTROL.md](VERSION_CONTROL.md) for more detail.
-
 ## Project structure
 
 ```
@@ -53,7 +39,6 @@ No build step. Open the app in a browser:
 ├── styles.css        # Pendo-themed layout and components
 ├── script.js        # Step flow, options matrix, rendering, and interactivity
 ├── README.md
-├── VERSION_CONTROL.md
 ├── LICENSE
 └── .gitignore
 ```
