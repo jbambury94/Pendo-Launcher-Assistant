@@ -238,9 +238,10 @@
     return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
-  /** Fills the summary section with one link per option (to Pendo support articles), labelled by browser/OS. */
+  /** Fills the summary section with one link per unique deployment option (deduped by id), labelled by browser/OS combo(s). */
   function renderSummaryLinks(items) {
     summaryLinks.innerHTML = "";
+    var byId = {};
     items.forEach(function (item) {
       var opt = item.opt;
       var url = SUPPORT_URLS[opt.id];
@@ -260,7 +261,7 @@
       a.href = entry.url;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
-      a.textContent = opt.title + " (" + formatBrowserOsLabel(item.browser, item.os) + ") — View setup guide";
+      a.textContent = label;
       li.appendChild(a);
       summaryLinks.appendChild(li);
     });
