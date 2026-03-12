@@ -1,16 +1,17 @@
 /*
   Pendo Launcher Deployment Decision App — Styles
-  Brand: https://www.pendo.io/brand-guide/logo/
+  Logo: https://www.pendo.io/brand-guide/logo/ (chevron points up and to the right; white or pink only)
   Typography: https://www.pendo.io/brand-guide/typography/ (Sora = display, Inter = workhorse)
-  Color: https://www.pendo.io/brand-guide/color/ (Pank #FF4876 = signature pink, primary)
+  Color: https://www.pendo.io/brand-guide/color/ (Pank #FF4876 = primary; Black #000000 = dark mode neutral)
   British English used in comments.
 */
 
 :root {
-  /* Pendo colour palette — Pank is primary per brand guide; Blurple/secondaries for UI variety */
+  /* Pendo colour palette — Pank primary; Black for dark surfaces per brand guide */
   --pendo-pank: #FF4876;
   --pendo-blurple: #4546E0;
   --pendo-off-black: #060119;
+  --pendo-black: #000000;
   --pendo-midnight: #17044A;
   --pendo-darkle: #432277;
   --pendo-mid-gray: #C6C1DB;
@@ -68,9 +69,9 @@ body {
 }
 
 /* ----- Header ----- */
-/* Logo: primary light lockup on dark (wordmark + chevron). Chevron = white or pink only; points up-right. */
+/* Logo: primary light lockup on dark (wordmark + chevron). Chevron points up and to the right; pink only. Clearspace = 1× chevron. */
 .header {
-  background: var(--pendo-off-black);
+  background: var(--pendo-black);
   color: var(--pendo-white);
   padding: var(--space-md) var(--space-lg);
 }
@@ -79,14 +80,15 @@ body {
   max-width: 960px;
   margin: 0 auto;
   display: flex;
-  align-items: baseline;
-  gap: var(--space-sm);
+  align-items: center;
+  gap: var(--logo-chevron-size);
 }
 
 .logo-wrap {
   display: inline-flex;
-  align-items: baseline;
-  gap: 2px;
+  align-items: center;
+  gap: var(--logo-chevron-size);
+  min-width: 100px;
 }
 
 .logo {
@@ -97,12 +99,17 @@ body {
   color: var(--pendo-white);
 }
 
-/* Chevron: Pendo growth symbol (points up-right) */
+/* Chevron: Pendo growth symbol — points up and to the right; white or pink only per brand guide */
+.logo-chevron-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .logo-chevron {
+  width: var(--logo-chevron-size);
+  height: var(--logo-chevron-size);
   color: var(--pendo-pank);
-  font-size: var(--logo-chevron-size);
-  font-weight: 700;
-  line-height: 1;
 }
 
 .logo-product {
