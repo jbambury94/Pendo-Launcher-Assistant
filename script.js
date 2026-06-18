@@ -12,6 +12,7 @@
     "chrome-intune": "https://support.pendo.io/hc/en-us/articles/21165368123163-Install-on-Chrome-for-Windows-using-Microsoft-Intune",
     "chrome-gpo": "https://support.pendo.io/hc/en-us/articles/21944872020123-Configure-on-Chrome-for-Windows-using-GPO",
     "edge-gpo": "https://support.pendo.io/hc/en-us/articles/21943953049115-Configure-on-Edge-for-Windows-using-GPO",
+    "edge-mdm-macos": "https://support.pendo.io/hc/en-us/articles/21164568842395-IT-guide-to-deploying-the-Pendo-Launcher",
     "firefox-policies": "https://support.pendo.io/hc/en-us/articles/21165410719771-Install-on-Firefox-for-Windows-or-macOS-using-policies-json",
     "firefox-native-manifest": "https://support.pendo.io/hc/en-us/articles/21165614712731-Configure-on-Firefox-for-macOS-using-native-manifest"
   };
@@ -64,7 +65,9 @@
     "edge|windows": [
       { id: "edge-gpo", title: "Group Policy (GPO)", desc: "Install and configure the Pendo Launcher on Microsoft Edge for Windows using Group Policy and registry keys.", pros: ["Native to Windows/Edge", "Visitor ID and metadata config via GPO"], cons: ["Windows only"] }
     ],
-    "edge|macos": [],
+    "edge|macos": [
+      { id: "edge-mdm-macos", title: "MDM configuration profile", desc: "Force-install the Pendo Launcher on Edge for macOS by pushing a configuration profile through your MDM (such as Intune or Jamf) that sets Edge's extension policy on the com.microsoft.edge domain.", pros: ["Uses existing macOS MDM tooling", "Can also set the API key, Visitor ID, and metadata"], cons: ["Requires an MDM that manages macOS configuration profiles", "No Group Policy equivalent on macOS"] }
+    ],
     "firefox|windows": [
       { id: "firefox-policies", title: "policies.json", desc: "Auto-install the Pendo Launcher on Firefox using MDM to deploy a policies.json file. Use force_installed or normal_installed.", pros: ["Supported on Windows and macOS", "Controlled via MDM"], cons: ["Requires MDM and Firefox policy support"] }
     ],
@@ -82,10 +85,19 @@
   var resultsIntro = document.getElementById("results-intro");
   var configLinks = document.getElementById("config-links");
   var configHint = document.getElementById("config-hint");
+  var stepProgressLabel = document.getElementById("step-progress-label");
+  var stepProgressBar = document.getElementById("step-progress-bar");
 
   /* ----- Step state ----- */
   var currentStep = "intro";
   var STEP_ORDER = ["intro", "browsers", "os", "config", "results"];
+  var STEP_LABELS = {
+    intro: "Get started",
+    browsers: "Choose browsers",
+    os: "Choose operating systems",
+    config: "Configure",
+    results: "Deployment options"
+  };
 
   /* ----- Selection helpers ----- */
   /** Returns an array of selected browser ids (chrome | edge | firefox). Multiple allowed. */
@@ -293,6 +305,7 @@
         var pressed = btn.getAttribute("aria-pressed") === "true";
         btn.setAttribute("aria-pressed", pressed ? "false" : "true");
         updateUI();
+        persistState();
       });
     });
     document.querySelectorAll(".option-btn[data-os]").forEach(function (btn) {
@@ -300,11 +313,27 @@
         var pressed = btn.getAttribute("aria-pressed") === "true";
         btn.setAttribute("aria-pressed", pressed ? "false" : "true");
         updateUI();
+        persistState();
       });
     });
   }
 
-  /** Shows one step panel, updates the URL hash, and moves focus to the panel heading. Pass skipFocus on initial load. */
+  /** Updates the progress label and bar for the given step. */
+  function updateProgress(step) {
+    var index = STEP_ORDER.indexOf(step);
+    if (index === -1) return;
+    var human = index + 1;
+    var total = STEP_ORDER.length;
+    if (stepProgressLabel) {
+      stepProgressLabel.textContent = "Step " + human + " of " + total + ": " + (STEP_LABELS[step] || step);
+    }
+    if (stepProgressBar) {
+      stepProgressBar.style.width = (human / total * 100) + "%";
+      stepProgressBar.setAttribute("aria-valuenow", String(human));
+    }
+  }
+
+  /** Shows one step panel, updates the URL and progress, and moves focus to the panel heading. Pass skipFocus on initial load. */
   function showStep(step, skipFocus) {
     currentStep = step;
     var activePanel = null;
@@ -313,11 +342,10 @@
       panel.hidden = !isActive;
       if (isActive) activePanel = panel;
     });
-    if (typeof location !== "undefined" && location.hash !== "#" + step) {
-      try { location.hash = step; } catch (e) { }
-    }
     if (step === "results") updateUI();
     if (step === "config") renderConfigStep();
+    updateProgress(step);
+    persistState();
     if (!skipFocus && activePanel) {
       var heading = activePanel.querySelector("h1, h2");
       if (heading) {
@@ -373,10 +401,97 @@
     if (btnChange) btnChange.addEventListener("click", function () { showStep("browsers"); updateUI(); });
   }
 
+  /* ----- Persistence: keep the selection in the URL query and localStorage so results are shareable and survive reloads ----- */
+  var STORAGE_KEY = "pla-selection";
+
+  /** Reflects the current selection into the URL (query + step hash) and localStorage. */
+  function persistState() {
+    var browsers = getSelectedBrowsers();
+    var oses = getSelectedOSes();
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ browsers: browsers, oses: oses })); } catch (e) { }
+    if (typeof history === "undefined" || !history.replaceState) return;
+    var params = [];
+    if (browsers.length) params.push("browsers=" + encodeURIComponent(browsers.join(",")));
+    if (oses.length) params.push("os=" + encodeURIComponent(oses.join(",")));
+    var query = params.length ? "?" + params.join("&") : "";
+    history.replaceState(null, "", location.pathname + query + "#" + currentStep);
+  }
+
+  /** Applies a saved selection ({ browsers, oses }) to the toggle buttons. */
+  function applySelectionState(state) {
+    if (!state) return;
+    var browsers = state.browsers || [];
+    var oses = state.oses || [];
+    document.querySelectorAll(".option-btn[data-browser]").forEach(function (btn) {
+      btn.setAttribute("aria-pressed", browsers.indexOf(btn.getAttribute("data-browser")) !== -1 ? "true" : "false");
+    });
+    document.querySelectorAll(".option-btn[data-os]").forEach(function (btn) {
+      btn.setAttribute("aria-pressed", oses.indexOf(btn.getAttribute("data-os")) !== -1 ? "true" : "false");
+    });
+  }
+
+  /** Reads a saved selection from the URL query first, then localStorage. Returns null if none. */
+  function loadSelectionState() {
+    if (typeof location !== "undefined" && location.search) {
+      var params = new URLSearchParams(location.search);
+      if (params.has("browsers") || params.has("os")) {
+        return {
+          browsers: (params.get("browsers") || "").split(",").filter(Boolean),
+          oses: (params.get("os") || "").split(",").filter(Boolean)
+        };
+      }
+    }
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  /** Clipboard fallback for browsers without the async clipboard API. */
+  function fallbackCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "absolute";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); } catch (e) { }
+    document.body.removeChild(ta);
+  }
+
+  /** Binds the results-step actions: print/save as PDF and copy a shareable link. */
+  function setupResultsActions() {
+    var btnPrint = document.getElementById("btn-print");
+    if (btnPrint) btnPrint.addEventListener("click", function () { window.print(); });
+
+    var btnCopyLink = document.getElementById("btn-copy-link");
+    if (btnCopyLink) {
+      var copyLabel = btnCopyLink.textContent;
+      var copyTimer;
+      btnCopyLink.addEventListener("click", function () {
+        var url = location.href;
+        var confirmCopied = function () {
+          btnCopyLink.textContent = "Link copied";
+          window.clearTimeout(copyTimer);
+          copyTimer = window.setTimeout(function () { btnCopyLink.textContent = copyLabel; }, 1800);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(confirmCopied, function () { fallbackCopy(url); confirmCopied(); });
+        } else {
+          fallbackCopy(url);
+          confirmCopied();
+        }
+      });
+    }
+  }
+
   /* ----- Initialise: attach listeners, restore step from hash, render ----- */
   setupOptionButtons();
   setupStepNavigation();
+  setupResultsActions();
   (function applyInitialStep() {
+    applySelectionState(loadSelectionState());
     var hash = typeof location !== "undefined" && location.hash ? location.hash.slice(1) : "";
     var step = STEP_ORDER.indexOf(hash) !== -1 ? hash : "intro";
     showStep(step, true);

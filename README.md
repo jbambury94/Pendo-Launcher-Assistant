@@ -10,6 +10,9 @@ A simple web app that helps project managers decide how to configure and deploy 
 - **Configuration guides** — A dedicated step lists the Visitor ID, metadata, and other configuration articles relevant to your selection.
 - **Deployment options** — Each option is shown as a card with a short description, pros and cons visible by default, and a **View setup guide** link to the official Pendo support article.
 - **Summary links** — After you complete the flow, a “Setup guides for your selection” section lists direct links to each method’s Pendo article.
+- **Progress indicator** — A “Step X of 5” label and progress bar show where you are in the flow.
+- **Shareable, saved selections** — Your browser and OS choices are encoded in the URL and saved to the browser, so results can be bookmarked, shared via link, or restored on your next visit.
+- **Print or export** — A print-friendly layout lets you save the deployment summary as a PDF, and a “Copy shareable link” button copies the URL for your selection.
 - **Manual install (testing only)** — Clearly labelled option and link for manual install, with a warning that it’s for testing and demo only, not production.
 
 ## How to run
@@ -30,7 +33,7 @@ No build step. Open the app in a browser:
 
 - **HTML** — Single page with step panels (intro, browsers, OS, configure, results).
 - **CSS** — One stylesheet with Pendo branding (Pank, Blurple, Sora/Inter).
-- **JavaScript** — Vanilla JS for step flow, multi-browser/OS selection, option cards, and summary links. No frameworks.
+- **JavaScript** — Vanilla JS for step flow, multi-browser/OS selection, option cards, summary links, progress indicator, URL/localStorage persistence, and print/copy actions. No frameworks.
 
 ## Project structure
 
