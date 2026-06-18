@@ -146,6 +146,12 @@ body {
   }
 }
 
+/* Step headings receive programmatic focus on navigation (for keyboard/screen-reader users); suppress the ring since the user did not tab here. */
+.step-panel h1:focus,
+.step-panel h2:focus {
+  outline: none;
+}
+
 .step-actions {
   display: flex;
   flex-wrap: wrap;
@@ -214,10 +220,6 @@ body {
 
 .section-options-inline {
   margin-bottom: var(--space-lg);
-}
-
-.section-hero {
-  margin-bottom: var(--space-2xl);
 }
 
 /* Hero: landing title and intro paragraph */

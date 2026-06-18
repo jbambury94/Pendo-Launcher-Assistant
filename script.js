@@ -118,34 +118,6 @@
     return result;
   }
 
-  /** Returns config options for the current browser(s) and OS(es). Merges browser|os-specific + additional, dedupes by id. */
-  function getConfigForSelection() {
-    var browsers = getSelectedBrowsers();
-    var oses = getSelectedOSes();
-    if (!browsers.length || !oses.length) return [];
-    var seen = {};
-    var merged = [];
-    browsers.forEach(function (browser) {
-      oses.forEach(function (os) {
-        var key = browser + "|" + os;
-        var items = CONFIG_OPTIONS[key] || [];
-        items.forEach(function (item) {
-          if (!seen[item.id]) {
-            seen[item.id] = true;
-            merged.push(item);
-          }
-        });
-      });
-    });
-    CONFIG_OPTIONS_ADDITIONAL.forEach(function (item) {
-      if (!seen[item.id]) {
-        seen[item.id] = true;
-        merged.push(item);
-      }
-    });
-    return merged;
-  }
-
   /** Returns config options for the current browser(s) and OS(es). Merges browser|os-specific + additional, dedupes by url. */
   function getConfigForSelection() {
     var browsers = getSelectedBrowsers();
@@ -309,7 +281,7 @@
         });
         renderSummaryLinks(opts);
       } else {
-        if (resultsIntro) resultsIntro.textContent = "No managed deployment options for your browser and OS selection. Consider manual install for testing only (see below), or change your selection.";
+        if (resultsIntro) resultsIntro.textContent = "No managed deployment method is documented for this browser and operating system combination. For quick testing you can use the manual install below, or go back and change your selection.";
       }
     }
   }
@@ -332,17 +304,27 @@
     });
   }
 
-  /** Shows one step panel and updates URL hash. Calls updateUI when showing results. */
-  function showStep(step) {
+  /** Shows one step panel, updates the URL hash, and moves focus to the panel heading. Pass skipFocus on initial load. */
+  function showStep(step, skipFocus) {
     currentStep = step;
+    var activePanel = null;
     document.querySelectorAll(".step-panel").forEach(function (panel) {
-      panel.hidden = panel.id !== "step-" + step;
+      var isActive = panel.id === "step-" + step;
+      panel.hidden = !isActive;
+      if (isActive) activePanel = panel;
     });
     if (typeof location !== "undefined" && location.hash !== "#" + step) {
       try { location.hash = step; } catch (e) { }
     }
     if (step === "results") updateUI();
     if (step === "config") renderConfigStep();
+    if (!skipFocus && activePanel) {
+      var heading = activePanel.querySelector("h1, h2");
+      if (heading) {
+        if (!heading.hasAttribute("tabindex")) heading.setAttribute("tabindex", "-1");
+        heading.focus();
+      }
+    }
   }
 
   /** Fills the config step with links for the current selection. */
@@ -397,7 +379,7 @@
   (function applyInitialStep() {
     var hash = typeof location !== "undefined" && location.hash ? location.hash.slice(1) : "";
     var step = STEP_ORDER.indexOf(hash) !== -1 ? hash : "intro";
-    showStep(step);
+    showStep(step, true);
     if (step !== "results" && step !== "config") updateUI();
   })();
 })();
