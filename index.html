@@ -16,20 +16,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <!-- Version query keeps browsers from pairing new HTML with a stale cached stylesheet/script -->
+  <link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body>
-  <!-- Site header: Pendo primary light lockup (wordmark + chevron on dark). Chevron points up and to the right; pink only per brand guide. -->
+  <!-- Site header: official Pendo primary light lockup on dark. Clicking the logo returns to the start. -->
   <header class="header">
     <div class="header-inner">
-      <span class="logo-wrap">
-        <span class="logo">Pendo</span>
-        <span class="logo-chevron-wrap" aria-hidden="true">
-          <svg class="logo-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" focusable="false">
-            <path fill="currentColor" d="M18 4.5 L4.5 18 L10.5 18 Z"/>
-          </svg>
-        </span>
-      </span>
+      <button type="button" id="logo-home" class="logo-home" aria-label="Pendo Launcher home">
+        <img src="assets/pendo-logo-primary-light.svg" alt="Pendo" class="logo-img" width="130" height="30">
+      </button>
       <span class="logo-product">Launcher</span>
     </div>
   </header>
@@ -115,6 +111,8 @@
 
       <!-- Step 5: Results (deployment options + summary + manual install) -->
       <section id="step-results" class="step-panel" hidden aria-labelledby="options-title">
+        <!-- Print-only banner so a saved PDF identifies itself without the on-screen header -->
+        <p class="print-title" aria-hidden="true">Pendo Launcher — Deployment Summary</p>
         <h2 id="options-title" class="section-title">Deployment options</h2>
         <p id="results-intro" class="section-intro">Review each method and its pros and cons. Use “View setup guide” to open the official Pendo instructions.</p>
         <div id="deployment-options-section" class="section-options-inline">
@@ -137,6 +135,8 @@
           <button type="button" id="btn-copy-link" class="button-secondary">Copy shareable link</button>
           <button type="button" id="btn-change-selection" class="button-secondary">Change selection</button>
         </div>
+        <p id="share-status" class="share-status" role="status" aria-live="polite" hidden></p>
+        <input id="share-manual-input" class="share-manual-input" type="text" readonly aria-label="Shareable link" hidden>
       </section>
     </div>
   </main>
@@ -147,6 +147,6 @@
   </footer>
 
   <!-- Application logic: step flow, options matrix, rendering, summary links -->
-  <script src="script.js"></script>
+  <script src="script.js?v=2"></script>
 </body>
 </html>

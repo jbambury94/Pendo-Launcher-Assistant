@@ -33,9 +33,6 @@
   --font-display: "Sora", sans-serif;
   --font-body: "Inter", sans-serif;
 
-  /* Logo: minimum 100px wide digitally; clearspace = 1× chevron */
-  --logo-chevron-size: 1.25rem;
-
   /* Spacing scale */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
@@ -69,7 +66,7 @@ body {
 }
 
 /* ----- Header ----- */
-/* Logo: primary light lockup on dark (wordmark + chevron). Chevron points up and to the right; pink only. Clearspace = 1× chevron. */
+/* Logo: official Pendo primary light lockup on dark. Clearspace = 1× chevron; minimum width 100px per brand guide. */
 .header {
   background: var(--pendo-black);
   color: var(--pendo-white);
@@ -81,37 +78,34 @@ body {
   margin: 0 auto;
   display: flex;
   align-items: center;
-  gap: var(--logo-chevron-size);
+  gap: var(--space-md);
 }
 
-.logo-wrap {
+/* Logo acts as a home control: reset native button chrome, keep brand clearspace */
+.logo-home {
   display: inline-flex;
   align-items: center;
-  gap: var(--logo-chevron-size);
+  padding: var(--space-xs);
+  margin: calc(-1 * var(--space-xs));
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.logo-home:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.logo-img {
+  display: block;
+  width: auto;
+  height: 30px;
   min-width: 100px;
 }
 
-.logo {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.375rem;
-  letter-spacing: -0.02em;
-  color: var(--pendo-white);
-}
-
-/* Chevron: Pendo growth symbol — points up and to the right; white or pink only per brand guide */
-.logo-chevron-wrap {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo-chevron {
-  width: var(--logo-chevron-size);
-  height: var(--logo-chevron-size);
-  color: var(--pendo-pank);
-}
-
+/* Product label sits beside the lockup, separated by a divider for a clear product lockup */
 .logo-product {
   font-family: var(--font-body);
   font-weight: 500;
@@ -119,6 +113,8 @@ body {
   color: var(--pendo-mid-gray);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  padding-left: var(--space-md);
+  border-left: 1px solid rgba(255, 255, 255, 0.24);
 }
 
 /* ----- Main content ----- */
@@ -573,14 +569,53 @@ body {
   text-decoration: underline;
 }
 
+/* ----- Share actions feedback (copy status + manual-copy fallback) ----- */
+.share-status {
+  margin: var(--space-sm) 0 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.share-manual-input {
+  width: 100%;
+  margin-top: var(--space-sm);
+  padding: var(--space-sm);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.share-manual-input:focus {
+  outline: none;
+  border-color: var(--pendo-pank);
+  box-shadow: var(--shadow-focus);
+}
+
+/* Print-only banner: hidden on screen, revealed in the print stylesheet */
+.print-title {
+  display: none;
+}
+
 /* ----- Print: produce a clean, self-contained handout of the results step ----- */
 @media print {
   .header,
   .footer,
   .step-progress,
   .step-actions,
-  .section-manual {
+  .section-manual,
+  .share-status,
+  .share-manual-input,
+  .step-panel[hidden] {
     display: none !important;
+  }
+
+  .print-title {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin: 0 0 var(--space-lg);
   }
 
   body {

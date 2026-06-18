@@ -41,11 +41,15 @@ No build step. Open the app in a browser:
 .
 ├── index.html        # Step-based layout: intro, browsers, OS, configure, results
 ├── styles.css        # Pendo-themed layout and components
-├── script.js        # Step flow, options matrix, rendering, and interactivity
+├── script.js         # Step flow, options matrix, rendering, and interactivity
+├── assets/           # Official Pendo logo lockups (primary light/dark) from the Pendo brand guide
+├── favicon.svg       # Pendo chevron icon
 ├── README.md
 ├── LICENSE
 └── .gitignore
 ```
+
+The header logo uses the official Pendo horizontal lockup from the [Pendo brand guide](https://www.pendo.io/brand-guide/logo/): the primary light variant (white wordmark, Pank chevron) on the dark header, with a matching primary dark variant kept for light contexts.
 
 ## References
 

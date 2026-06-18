@@ -85,8 +85,6 @@
   var resultsIntro = document.getElementById("results-intro");
   var configLinks = document.getElementById("config-links");
   var configHint = document.getElementById("config-hint");
-  var stepProgressLabel = document.getElementById("step-progress-label");
-  var stepProgressBar = document.getElementById("step-progress-bar");
 
   /* ----- Step state ----- */
   var currentStep = "intro";
@@ -318,23 +316,33 @@
     });
   }
 
-  /** Updates the progress label and bar for the given step. */
+  /** Updates the progress label and bar for the given step. Re-queries the DOM so a stale reference can never silently stop updates. */
   function updateProgress(step) {
     var index = STEP_ORDER.indexOf(step);
     if (index === -1) return;
     var human = index + 1;
     var total = STEP_ORDER.length;
-    if (stepProgressLabel) {
-      stepProgressLabel.textContent = "Step " + human + " of " + total + ": " + (STEP_LABELS[step] || step);
+    var label = document.getElementById("step-progress-label");
+    var bar = document.getElementById("step-progress-bar");
+    if (label) {
+      label.textContent = "Step " + human + " of " + total + ": " + (STEP_LABELS[step] || step);
     }
-    if (stepProgressBar) {
-      stepProgressBar.style.width = (human / total * 100) + "%";
-      stepProgressBar.setAttribute("aria-valuenow", String(human));
+    if (bar) {
+      bar.style.width = (human / total * 100) + "%";
+      bar.setAttribute("aria-valuenow", String(human));
+    }
+    if (document.documentElement) {
+      document.documentElement.setAttribute("data-step", step);
     }
   }
 
-  /** Shows one step panel, updates the URL and progress, and moves focus to the panel heading. Pass skipFocus on initial load. */
-  function showStep(step, skipFocus) {
+  /**
+   * Shows one step panel, updates the URL and progress, and moves focus to the panel heading.
+   * options.skipFocus: don't move focus (initial load and back/forward).
+   * options.history: "push" (default) adds a history entry, "replace" updates it in place, "none" leaves history untouched (used when responding to back/forward).
+   */
+  function showStep(step, options) {
+    options = options || {};
     currentStep = step;
     var activePanel = null;
     document.querySelectorAll(".step-panel").forEach(function (panel) {
@@ -345,8 +353,8 @@
     if (step === "results") updateUI();
     if (step === "config") renderConfigStep();
     updateProgress(step);
-    persistState();
-    if (!skipFocus && activePanel) {
+    persistState(options.history || "push");
+    if (!options.skipFocus && activePanel) {
       var heading = activePanel.querySelector("h1, h2");
       if (heading) {
         if (!heading.hasAttribute("tabindex")) heading.setAttribute("tabindex", "-1");
@@ -401,20 +409,56 @@
     if (btnChange) btnChange.addEventListener("click", function () { showStep("browsers"); updateUI(); });
   }
 
+  /** Makes the header logo a "home" control that returns to the first step (selection is kept). */
+  function setupLogoHome() {
+    var logoHome = document.getElementById("logo-home");
+    if (!logoHome) return;
+    logoHome.addEventListener("click", function () {
+      showStep("intro");
+      if (typeof window !== "undefined" && window.scrollTo) window.scrollTo(0, 0);
+    });
+  }
+
   /* ----- Persistence: keep the selection in the URL query and localStorage so results are shareable and survive reloads ----- */
   var STORAGE_KEY = "pla-selection";
+  /* Hosted home so links copied while viewing locally (file://) still point somewhere shareable. */
+  var HOSTED_BASE_URL = "https://jbambury94.github.io/Pendo-Launcher-Assistant/";
 
-  /** Reflects the current selection into the URL (query + step hash) and localStorage. */
-  function persistState() {
+  /** Builds the "?browsers=...&os=..." query string for the current selection (empty string when nothing is selected). */
+  function selectionQuery() {
     var browsers = getSelectedBrowsers();
     var oses = getSelectedOSes();
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ browsers: browsers, oses: oses })); } catch (e) { }
-    if (typeof history === "undefined" || !history.replaceState) return;
     var params = [];
     if (browsers.length) params.push("browsers=" + encodeURIComponent(browsers.join(",")));
     if (oses.length) params.push("os=" + encodeURIComponent(oses.join(",")));
-    var query = params.length ? "?" + params.join("&") : "";
-    history.replaceState(null, "", location.pathname + query + "#" + currentStep);
+    return params.length ? "?" + params.join("&") : "";
+  }
+
+  /**
+   * Reflects the current selection into the URL (query + step hash) and localStorage.
+   * historyMode: "push" adds a back/forward entry, "replace" (default) updates in place, "none" skips the URL update.
+   */
+  function persistState(historyMode) {
+    var browsers = getSelectedBrowsers();
+    var oses = getSelectedOSes();
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ browsers: browsers, oses: oses })); } catch (e) { }
+    if (historyMode === "none") return;
+    if (typeof history === "undefined" || !history.replaceState) return;
+    var url = location.pathname + selectionQuery() + "#" + currentStep;
+    if (historyMode === "push" && history.pushState) {
+      history.pushState(null, "", url);
+    } else {
+      history.replaceState(null, "", url);
+    }
+  }
+
+  /** Returns a shareable absolute URL for the current selection. On file:// it points at the hosted app so the copied link works for others. */
+  function getShareableUrl() {
+    var suffix = selectionQuery() + "#" + currentStep;
+    if (typeof location !== "undefined" && location.protocol === "file:") {
+      return HOSTED_BASE_URL + suffix;
+    }
+    return location.origin + location.pathname + suffix;
   }
 
   /** Applies a saved selection ({ browsers, oses }) to the toggle buttons. */
@@ -447,7 +491,7 @@
     } catch (e) { return null; }
   }
 
-  /** Clipboard fallback for browsers without the async clipboard API. */
+  /** Clipboard fallback for browsers without the async clipboard API. Returns true if the copy command succeeded. */
   function fallbackCopy(text) {
     var ta = document.createElement("textarea");
     ta.value = text;
@@ -456,45 +500,103 @@
     ta.style.left = "-9999px";
     document.body.appendChild(ta);
     ta.select();
-    try { document.execCommand("copy"); } catch (e) { }
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
     document.body.removeChild(ta);
+    return ok;
+  }
+
+  /** Shows a transient or persistent status message beneath the results actions. */
+  function setShareStatus(message) {
+    var status = document.getElementById("share-status");
+    if (!status) return;
+    status.textContent = message || "";
+    status.hidden = !message;
+  }
+
+  /** Lets the user copy the link by hand when the clipboard is blocked: selects the URL in a temporary field. */
+  function promptManualCopy(url) {
+    setShareStatus("Couldn't copy automatically. Press " + (isMacPlatform() ? "Cmd" : "Ctrl") + "+C to copy the selected link: " + url);
+    var input = document.getElementById("share-manual-input");
+    if (!input) return;
+    input.value = url;
+    input.hidden = false;
+    input.focus();
+    input.select();
+  }
+
+  /** Rough platform check, only used to label the manual-copy shortcut. */
+  function isMacPlatform() {
+    return typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || "");
   }
 
   /** Binds the results-step actions: print/save as PDF and copy a shareable link. */
   function setupResultsActions() {
     var btnPrint = document.getElementById("btn-print");
-    if (btnPrint) btnPrint.addEventListener("click", function () { window.print(); });
+    if (btnPrint) {
+      btnPrint.addEventListener("click", function () {
+        if (currentStep !== "results") showStep("results");
+        window.print();
+      });
+    }
 
     var btnCopyLink = document.getElementById("btn-copy-link");
     if (btnCopyLink) {
       var copyLabel = btnCopyLink.textContent;
       var copyTimer;
+      var confirmCopied = function () {
+        setShareStatus("");
+        var manualInput = document.getElementById("share-manual-input");
+        if (manualInput) manualInput.hidden = true;
+        btnCopyLink.textContent = "Link copied";
+        window.clearTimeout(copyTimer);
+        copyTimer = window.setTimeout(function () { btnCopyLink.textContent = copyLabel; }, 1800);
+      };
       btnCopyLink.addEventListener("click", function () {
-        var url = location.href;
-        var confirmCopied = function () {
-          btnCopyLink.textContent = "Link copied";
-          window.clearTimeout(copyTimer);
-          copyTimer = window.setTimeout(function () { btnCopyLink.textContent = copyLabel; }, 1800);
-        };
+        var url = getShareableUrl();
         if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(url).then(confirmCopied, function () { fallbackCopy(url); confirmCopied(); });
-        } else {
-          fallbackCopy(url);
+          navigator.clipboard.writeText(url).then(confirmCopied, function () {
+            if (fallbackCopy(url)) confirmCopied();
+            else promptManualCopy(url);
+          });
+        } else if (fallbackCopy(url)) {
           confirmCopied();
+        } else {
+          promptManualCopy(url);
         }
       });
     }
   }
 
+  /** Resolves the step the URL currently points at, defaulting to the intro. */
+  function stepFromUrl() {
+    var hash = typeof location !== "undefined" && location.hash ? location.hash.slice(1) : "";
+    return STEP_ORDER.indexOf(hash) !== -1 ? hash : "intro";
+  }
+
+  /** Re-syncs the view with the URL after back/forward or a manual hash change, without pushing new history. */
+  function syncFromUrl() {
+    applySelectionState(loadSelectionState());
+    var step = stepFromUrl();
+    if (step !== currentStep) {
+      showStep(step, { skipFocus: true, history: "none" });
+    }
+    updateUI();
+  }
+
   /* ----- Initialise: attach listeners, restore step from hash, render ----- */
   setupOptionButtons();
   setupStepNavigation();
+  setupLogoHome();
   setupResultsActions();
+  if (typeof window !== "undefined" && window.addEventListener) {
+    window.addEventListener("popstate", syncFromUrl);
+    window.addEventListener("hashchange", syncFromUrl);
+  }
   (function applyInitialStep() {
     applySelectionState(loadSelectionState());
-    var hash = typeof location !== "undefined" && location.hash ? location.hash.slice(1) : "";
-    var step = STEP_ORDER.indexOf(hash) !== -1 ? hash : "intro";
-    showStep(step, true);
+    var step = stepFromUrl();
+    showStep(step, { skipFocus: true, history: "replace" });
     if (step !== "results" && step !== "config") updateUI();
   })();
 })();
