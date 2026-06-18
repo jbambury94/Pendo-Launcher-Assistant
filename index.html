@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   Pendo Launcher Deployment Decision App
-  Single-page guide: step-based flow (intro → browsers → OS → results).
+  Single-page guide: step-based flow (intro → browsers → OS → configure → results).
   Content based on Pendo IT guide; manual install is for testing only.
 -->
 <html lang="en">
@@ -10,6 +10,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pendo Launcher: Deployment and Configuration Guide</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="favicon.png">
   <!-- Google Fonts: Sora (display), Inter (workhorse) per Pendo typography guide -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,20 +74,20 @@
         </div>
       </section>
 
-      <!-- Step 3: OS single-select -->
+      <!-- Step 3: OS multi-select -->
       <section id="step-os" class="step-panel" hidden aria-labelledby="step-os-title">
-        <h2 id="step-os-title" class="section-title">Choose your operating system</h2>
-        <p class="section-intro">Select the operating system you plan to deploy to.</p>
+        <h2 id="step-os-title" class="section-title">Choose your operating systems</h2>
+        <p class="section-intro">Select one or more operating systems you plan to deploy to. You can select multiple.</p>
         <div class="choice-row choice-row-single">
           <fieldset class="fieldset">
             <legend class="fieldset-legend">Operating system</legend>
-            <div class="option-buttons" role="group" aria-label="Operating system selection">
+            <div class="option-buttons" role="group" aria-label="Operating system selection" aria-multiselectable="true">
               <button type="button" class="option-btn" data-os="windows" aria-pressed="false">Windows</button>
               <button type="button" class="option-btn" data-os="macos" aria-pressed="false">macOS</button>
             </div>
           </fieldset>
         </div>
-        <p id="choice-hint-os" class="choice-hint" aria-live="polite">Select your operating system.</p>
+        <p id="choice-hint-os" class="choice-hint" aria-live="polite">Select at least one operating system.</p>
         <div class="step-actions">
           <button type="button" id="btn-back-os" class="button-secondary">Back</button>
           <button type="button" id="btn-next-os" class="cta-button" disabled>Next</button>

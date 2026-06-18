@@ -4,9 +4,10 @@ A simple web app that helps project managers decide how to configure and deploy 
 
 ## What it does
 
-- **Step-based flow** — Intro → Choose browsers → Choose OS → Results. One step at a time; no scrolling to find the next choice.
+- **Step-based flow** — Intro → Choose browsers → Choose OS → Configure → Results. One step at a time; no scrolling to find the next choice.
 - **Pre-deploy checklist** — Reminds you to align with dev, security, privacy, and IT before rollout.
-- **Browser & OS selection** — Select one or more browsers (Chrome, Edge, Firefox) and one OS (Windows or macOS) to see only relevant deployment methods.
+- **Browser & OS selection** — Select one or more browsers (Chrome, Edge, Firefox) and one or more operating systems (Windows, macOS) to see only relevant deployment methods.
+- **Configuration guides** — A dedicated step lists the Visitor ID, metadata, and other configuration articles relevant to your selection.
 - **Deployment options** — Each option is shown as a card with a short description, pros and cons visible by default, and a **View setup guide** link to the official Pendo support article.
 - **Summary links** — After you complete the flow, a “Setup guides for your selection” section lists direct links to each method’s Pendo article.
 - **Manual install (testing only)** — Clearly labelled option and link for manual install, with a warning that it’s for testing and demo only, not production.
@@ -27,7 +28,7 @@ No build step. Open the app in a browser:
 
 ## Tech stack
 
-- **HTML** — Single page with step panels (intro, browsers, OS, results).
+- **HTML** — Single page with step panels (intro, browsers, OS, configure, results).
 - **CSS** — One stylesheet with Pendo branding (Pank, Blurple, Sora/Inter).
 - **JavaScript** — Vanilla JS for step flow, multi-browser/OS selection, option cards, and summary links. No frameworks.
 
@@ -35,7 +36,7 @@ No build step. Open the app in a browser:
 
 ```
 .
-├── index.html        # Step-based layout: intro, browsers, OS, results
+├── index.html        # Step-based layout: intro, browsers, OS, configure, results
 ├── styles.css        # Pendo-themed layout and components
 ├── script.js        # Step flow, options matrix, rendering, and interactivity
 ├── README.md
