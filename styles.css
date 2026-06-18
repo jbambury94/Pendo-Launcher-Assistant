@@ -128,6 +128,33 @@ body {
   padding: var(--space-xl) var(--space-lg);
 }
 
+/* ----- Wizard progress indicator: label + bar updated by script ----- */
+.step-progress {
+  margin-bottom: var(--space-xl);
+}
+
+.step-progress-label {
+  margin: 0 0 var(--space-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.step-progress-track {
+  height: 6px;
+  background: var(--color-bg-subtle);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.step-progress-bar {
+  height: 100%;
+  width: 20%;
+  background: var(--pendo-pank);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
 /* Step-based flow: one panel visible at a time */
 .step-container {
   min-height: 40vh;
@@ -544,4 +571,47 @@ body {
 
 .footer a:hover {
   text-decoration: underline;
+}
+
+/* ----- Print: produce a clean, self-contained handout of the results step ----- */
+@media print {
+  .header,
+  .footer,
+  .step-progress,
+  .step-actions,
+  .section-manual {
+    display: none !important;
+  }
+
+  body {
+    color: #000;
+    background: #fff;
+  }
+
+  .main {
+    max-width: none;
+    padding: 0;
+  }
+
+  .options-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .option-card {
+    border: 1px solid #999;
+    box-shadow: none;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Expand link targets so the printed page is usable without clicking */
+  .option-card .option-link::after,
+  .summary-links a::after,
+  .config-links a::after {
+    content: " (" attr(href) ")";
+    font-weight: 400;
+    font-size: 0.85em;
+    color: #555;
+    word-break: break-all;
+  }
 }

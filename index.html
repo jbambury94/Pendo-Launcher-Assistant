@@ -35,6 +35,13 @@
   </header>
 
   <main class="main">
+    <!-- Wizard progress indicator: label and bar updated by script on each step -->
+    <nav class="step-progress" aria-label="Progress">
+      <p id="step-progress-label" class="step-progress-label" aria-live="polite">Step 1 of 5: Get started</p>
+      <div class="step-progress-track">
+        <div id="step-progress-bar" class="step-progress-bar" role="progressbar" aria-valuemin="1" aria-valuemax="5" aria-valuenow="1" aria-label="Wizard progress"></div>
+      </div>
+    </nav>
     <div id="step-container" class="step-container">
       <!-- Step 1: Intro + checklist + CTA -->
       <section id="step-intro" class="step-panel" aria-labelledby="hero-title">
@@ -126,6 +133,8 @@
           <a href="https://support.pendo.io/hc/en-us/articles/21165109646619-Manually-install-the-Pendo-Launcher-for-testing-and-demoing" class="cta-link cta-link-external" target="_blank" rel="noopener noreferrer">Manually install the Pendo Launcher for testing and demoing</a>
         </section>
         <div class="step-actions">
+          <button type="button" id="btn-print" class="button-secondary">Print or save as PDF</button>
+          <button type="button" id="btn-copy-link" class="button-secondary">Copy shareable link</button>
           <button type="button" id="btn-change-selection" class="button-secondary">Change selection</button>
         </div>
       </section>
